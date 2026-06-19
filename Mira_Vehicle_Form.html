@@ -541,24 +541,27 @@ function generatePDF(ft) {
   var sw = MW/2-6, sh = 38;
 
   function drawSigBox(padId, label, sx) {
+    var by = y; // capture y at the moment this box is drawn
     doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
-    doc.text(label, sx, y);
+    doc.text(label, sx, by);
     doc.setFillColor(238,243,250);
-    doc.rect(sx, y+1, sw, sh, 'F');
+    doc.rect(sx, by+1, sw, sh, 'F');
     doc.setDrawColor.apply(doc,NAVY); doc.setLineWidth(0.5);
-    doc.rect(sx, y+1, sw, sh, 'S');
+    doc.rect(sx, by+1, sw, sh, 'S');
     var pad = pads[padId];
+    console.log('drawSigBox', padId, 'pad found:', !!pad, 'hasSig:', pad?pad.hasSig():false, 'pads keys:', Object.keys(pads));
     if (pad && pad.hasSig()) {
       var img = pad.getDataURL();
-      doc.addImage(img, 'JPEG', sx+1, y+2, sw-2, sh-2);
+      console.log('img length:', img.length, 'starts:', img.substring(0,25));
+      doc.addImage(img, 'JPEG', sx+1, by+2, sw-2, sh-2);
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
-      doc.text('No signature', sx+sw/2, y+sh/2+2, {align:'center'});
+      doc.text('No signature', sx+sw/2, by+sh/2+2, {align:'center'});
     }
-    var dateId = pfx + (padId.indexOf('drv')>=0||padId.indexOf('driver')>=0 ? '_drv_date' : '_mgr_date');
+    var dateId = pfx + (padId.indexOf('driver')>=0 ? '_drv_date' : '_mgr_date');
     var dval = (document.getElementById(dateId)||{}).value||'';
     doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
-    doc.text('Date: '+(dval||'_______________'), sx, y+sh+6);
+    doc.text('Date: '+(dval||'_______________'), sx, by+sh+6);
   }
 
   var drvId = pfx+'_sig_driver', mgrId = pfx+'_sig_manager';
