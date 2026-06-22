@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>L-test fina — Vehicle Form</title>
+<title>This is iT</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -133,6 +133,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>License Plate</label><input type="text" id="co_plate"></div>
           <div class="field"><label>Driver Phone #</label><input type="tel" id="co_phone"></div>
         </div>
+        <div class="field-grid cols2" style="margin-top:14px">
+          <div class="field"><label>Driver Email</label><input type="email" id="co_email" placeholder="e.g. driver@mirapest.com"></div>
+        </div>
       </div>
     </div>
     <div class="section">
@@ -203,6 +206,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>Fuel Card Returned</label>
             <select id="ret_fuel_card"><option value="">Select</option><option>Yes</option><option>No</option></select>
           </div>
+        </div>
+        <div class="field-grid cols2" style="margin-top:14px">
+          <div class="field"><label>Driver Email</label><input type="email" id="ret_email" placeholder="e.g. driver@mirapest.com"></div>
         </div>
       </div>
     </div>
@@ -476,6 +482,7 @@ function generatePDF(ft) {
     fld('Fuel Card #', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
+    y+=9; fld('Driver Email', document.getElementById('co_email').value, ML, y, MW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
@@ -487,6 +494,7 @@ function generatePDF(ft) {
     fld('Fuel Level at Return', document.getElementById('ret_fuel_level').value, ML, y, t3b);
     fld('Miles Driven', document.getElementById('ret_miles').value, ML+t3b+3, y, t3b);
     fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML+2*t3b+6, y, t3b);
+    y+=9; fld('Driver Email', document.getElementById('ret_email').value, ML, y, MW);
   }
   y += 10;
 
@@ -639,12 +647,16 @@ async function submitForm(ft) {
     console.log('submitForm: logging to Sheets, token present:', !!_gt);
     var pfxEl = ft==='checkout'?'co':'ret';
     await logToSheet(ft, {
-      date:     document.getElementById(pfxEl+'_date').value || dt,
-      driver:   document.getElementById(pfxEl+'_hcs_name').value || '',
-      vin:      vin,
-      location: document.getElementById(pfxEl+'_location').value || '',
-      odometer: document.getElementById(pfxEl+(ft==='checkout'?'_odometer':'_odometer')).value || '',
-      link:     link
+      date:      document.getElementById(pfxEl+'_date').value || dt,
+      location:  document.getElementById(pfxEl+'_location').value || '',
+      driver:    document.getElementById(pfxEl+'_hcs_name').value || '',
+      make:      document.getElementById(pfxEl+'_make_model').value || '',
+      vin:       vin,
+      fuel_card: document.getElementById(pfxEl+'_fuel_card').value || '',
+      plate:     document.getElementById(pfxEl+'_plate').value || '',
+      phone:     document.getElementById(pfxEl+'_phone').value || '',
+      email:     document.getElementById(pfxEl+'_email').value || '',
+      link:      link
     }, _gt);
     console.log('submitForm: Sheets logging done');
 
@@ -720,17 +732,20 @@ async function logToSheet(ft, row, token) {
   var formType = ft === 'checkout' ? 'Check-Out' : 'Return';
   var values = [[
     row.date,
-    row.driver,
-    row.vin,
-    formType,
     row.location,
-    row.odometer,
+    row.driver,
+    row.make,
+    row.vin,
+    row.fuel_card,
+    row.plate,
+    row.phone,
+    row.email,
     row.link
   ]];
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/'
     + SETTINGS.sheet_id
     + '/values/'
-    + encodeURIComponent(SETTINGS.sheet_tab + '!A:G')
+    + encodeURIComponent(SETTINGS.sheet_tab + '!A:J')
     + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
   var res = await fetch(url, {
     method: 'POST',
