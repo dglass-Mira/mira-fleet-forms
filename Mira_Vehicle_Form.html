@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Testing — Vehicle Form</title>
+<title>Mira Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -544,7 +544,19 @@ function generatePDF(ft) {
   if (dmg) doc.text(doc.splitTextToSize(dmg,MW-4), ML+2, y+5);
   y += 20;
 
-  // Sign-off
+  // Sign-off — start a new page so signatures are never clipped
+  doc.addPage();
+  // Repeat header on page 2
+  doc.setFillColor.apply(doc, NAVY);
+  doc.rect(0, 0, PW, 18, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('MIRA HOME', ML, 11);
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text('FLEET SERVICES', ML, 15.5);
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text(title, MR, 11, {align:'right'});
+  y = 24;
   secHdr('Sign-Off');
   y += 3;
   var sw = MW/2-6, sh = 38;
@@ -565,6 +577,7 @@ function generatePDF(ft) {
       try {
         // Strip the data URL prefix — pass raw base64 directly to jsPDF
         var b64 = img.replace(/^data:image\/png;base64,/, '');
+        console.log('addImage coords:', 'x:', sx+1, 'y:', by+2, 'w:', sw-2, 'h:', sh-2, 'page:', doc.internal.getCurrentPageInfo().pageNumber);
         doc.addImage(b64, 'PNG', sx+1, by+2, sw-2, sh-2);
         console.log('addImage succeeded');
       } catch(e) {
