@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Home - Truck Check Out Form</title>
+<title>Mira Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -84,6 +84,36 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
   .form-card{margin:12px 8px}
   .btn{width:100%}
 }
+
+  /* ── RENTAL CHECKBOX ── */
+  .rental-field {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .rental-field label { margin-bottom: 6px; }
+  .rental-toggle {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    height: 28px;
+  }
+  .rental-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    margin: 0;
+  }
+  .rental-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--navy);
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -135,6 +165,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
         </div>
         <div class="field-grid cols2" style="margin-top:14px">
           <div class="field"><label>Driver Email</label><input type="email" id="co_email" placeholder="e.g. driver@mirapest.com"></div>
+          <div class="field rental-field">
+            <label>Is this a Rental?</label>
+            <div class="rental-toggle">
+              <label><input type="checkbox" id="co_rental_yes" name="co_rental" onchange="if(this.checked)document.getElementById('co_rental_no').checked=false"> Yes</label>
+              <label><input type="checkbox" id="co_rental_no" name="co_rental" onchange="if(this.checked)document.getElementById('co_rental_yes').checked=false"> No</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -209,6 +246,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
         </div>
         <div class="field-grid cols2" style="margin-top:14px">
           <div class="field"><label>Driver Email</label><input type="email" id="ret_email" placeholder="e.g. driver@mirapest.com"></div>
+          <div class="field rental-field">
+            <label>Is this a Rental?</label>
+            <div class="rental-toggle">
+              <label><input type="checkbox" id="ret_rental_yes" name="ret_rental" onchange="if(this.checked)document.getElementById('ret_rental_no').checked=false"> Yes</label>
+              <label><input type="checkbox" id="ret_rental_no" name="ret_rental" onchange="if(this.checked)document.getElementById('ret_rental_yes').checked=false"> No</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -482,7 +526,11 @@ function generatePDF(ft) {
     fld('Fuel Card #', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
-    y+=9; fld('Driver Email', document.getElementById('co_email').value, ML, y, MW);
+    y+=9;
+    var coEmailW = MW/2-3;
+    fld('Driver Email', document.getElementById('co_email').value, ML, y, coEmailW);
+    var coRental = document.getElementById('co_rental_yes').checked ? 'Yes' : document.getElementById('co_rental_no').checked ? 'No' : '';
+    fld('Is this a Rental?', coRental, ML+coEmailW+6, y, coEmailW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
@@ -494,7 +542,11 @@ function generatePDF(ft) {
     fld('Fuel Level at Return', document.getElementById('ret_fuel_level').value, ML, y, t3b);
     fld('Miles Driven', document.getElementById('ret_miles').value, ML+t3b+3, y, t3b);
     fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML+2*t3b+6, y, t3b);
-    y+=9; fld('Driver Email', document.getElementById('ret_email').value, ML, y, MW);
+    y+=9;
+    var retEmailW = MW/2-3;
+    fld('Driver Email', document.getElementById('ret_email').value, ML, y, retEmailW);
+    var retRental = document.getElementById('ret_rental_yes').checked ? 'Yes' : document.getElementById('ret_rental_no').checked ? 'No' : '';
+    fld('Is this a Rental?', retRental, ML+retEmailW+6, y, retEmailW);
   }
   y += 10;
 
@@ -656,6 +708,7 @@ async function submitForm(ft) {
       plate:     document.getElementById(pfxEl+'_plate').value || '',
       phone:     document.getElementById(pfxEl+'_phone').value || '',
       email:     document.getElementById(pfxEl+'_email').value || '',
+      rental:    document.getElementById(pfxEl+'_rental_yes').checked ? 'Yes' : document.getElementById(pfxEl+'_rental_no').checked ? 'No' : '',
       link:      link
     }, _gt);
     console.log('submitForm: Sheets logging done');
@@ -740,12 +793,13 @@ async function logToSheet(ft, row, token) {
     row.plate,
     row.phone,
     row.email,
+    row.rental,
     row.link
   ]];
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/'
     + SETTINGS.sheet_id
     + '/values/'
-    + encodeURIComponent(SETTINGS.sheet_tab + '!A:J')
+    + encodeURIComponent(SETTINGS.sheet_tab + '!A:K')
     + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
   var res = await fetch(url, {
     method: 'POST',
