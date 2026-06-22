@@ -268,6 +268,8 @@ var SETTINGS = {
   emailjs_key:        'KBaa4T5WwOtfhW781',
   drive_folder:       '1QC9uRFEd6d_Yx6MQozhJyzoul-AET-dY',
   google_client:      '373220643241-ob1aaiqp7v6kfalug49jtfkvgf00a474.apps.googleusercontent.com',
+  sheet_id:           '1lSMKUViOp_zT_yilA2xMqcvPsYDAU2MMFifXizYzH04',
+  sheet_tab:          'Truck Checkouts',
 };
 
 // ── CHECKLISTS ───────────────────────────────────────────
@@ -629,6 +631,17 @@ async function submitForm(ft) {
     setStatus(ft,'Uploading to Google Drive...');
     var link = await uploadDrive(blob, fname);
 
+    setStatus(ft,'Logging to Google Sheets...');
+    var pfxEl = ft==='checkout'?'co':'ret';
+    await logToSheet(ft, {
+      date:     document.getElementById(pfxEl+'_date').value || dt,
+      driver:   document.getElementById(pfxEl+'_hcs_name').value || '',
+      vin:      vin,
+      location: document.getElementById(pfxEl+'_location').value || '',
+      odometer: document.getElementById(pfxEl+(ft==='checkout'?'_odometer':'_odometer')).value || '',
+      link:     link
+    });
+
     setStatus(ft,'Sending email...');
     await sendEmail(fname, ft, link);
 
@@ -664,7 +677,7 @@ async function uploadDrive(blob, fname) {
   return new Promise(function(resolve, reject) {
     var tc = google.accounts.oauth2.initTokenClient({
       client_id: SETTINGS.google_client,
-      scope: 'https://www.googleapis.com/auth/drive.file',
+      scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
       callback: async function(resp) {
         if (resp.error) { reject(new Error(resp.error)); return; }
         _gt = resp.access_token;
@@ -692,6 +705,35 @@ async function doUpload(blob, name, token) {
   var data = await res.json();
   showToast('Saved to Google Drive');
   return data.webViewLink || 'https://drive.google.com/file/d/'+data.id+'/view';
+}
+
+// ── GOOGLE SHEETS ────────────────────────────────────────
+async function logToSheet(ft, row) {
+  var formType = ft === 'checkout' ? 'Check-Out' : 'Return';
+  var values = [[
+    row.date,
+    row.driver,
+    row.vin,
+    formType,
+    row.location,
+    row.odometer,
+    row.link
+  ]];
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'
+    + SETTINGS.sheet_id
+    + '/values/'
+    + encodeURIComponent(SETTINGS.sheet_tab)
+    + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
+  var res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + _gt, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: values })
+  });
+  if (!res.ok) {
+    var err = await res.text();
+    throw new Error('Sheets log failed: ' + err);
+  }
+  showToast('Logged to Google Sheets');
 }
 
 // ── EMAILJS ──────────────────────────────────────────────
