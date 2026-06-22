@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Google Log — Vehicle Form</title>
+<title>Mira Log Test — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -621,17 +621,22 @@ async function submitForm(ft) {
   btn.disabled = true;
   setStatus(ft, 'Generating PDF...');
   try {
+    console.log('submitForm: generating PDF');
     var doc = generatePDF(ft);
     var pfx = ft==='checkout'?'co':'ret';
     var vin = (document.getElementById(pfx+'_vin5').value||'UNKNOWN').toUpperCase();
     var dt  = document.getElementById(pfx+'_date').value || new Date().toISOString().slice(0,10);
     var fname = 'Mira_Vehicle_'+(ft==='checkout'?'CheckOut':'Return')+'_'+vin+'_'+dt+'.pdf';
     var blob = doc.output('blob');
+    console.log('submitForm: PDF ready, blob size:', blob.size);
 
     setStatus(ft,'Uploading to Google Drive...');
+    console.log('submitForm: starting Drive upload');
     var link = await uploadDrive(blob, fname);
+    console.log('submitForm: Drive upload done, link:', link);
 
     setStatus(ft,'Logging to Google Sheets...');
+    console.log('submitForm: logging to Sheets, token present:', !!_gt);
     var pfxEl = ft==='checkout'?'co':'ret';
     await logToSheet(ft, {
       date:     document.getElementById(pfxEl+'_date').value || dt,
@@ -640,10 +645,13 @@ async function submitForm(ft) {
       location: document.getElementById(pfxEl+'_location').value || '',
       odometer: document.getElementById(pfxEl+(ft==='checkout'?'_odometer':'_odometer')).value || '',
       link:     link
-    });
+    }, _gt);
+    console.log('submitForm: Sheets logging done');
 
     setStatus(ft,'Sending email...');
+    console.log('submitForm: sending email');
     await sendEmail(fname, ft, link);
+    console.log('submitForm: email sent');
 
     document.getElementById('modal-msg').textContent = 'Saved to Google Drive and email sent to '+SETTINGS.email+'.';
     document.getElementById('modal').classList.add('show');
@@ -708,7 +716,7 @@ async function doUpload(blob, name, token) {
 }
 
 // ── GOOGLE SHEETS ────────────────────────────────────────
-async function logToSheet(ft, row) {
+async function logToSheet(ft, row, token) {
   var formType = ft === 'checkout' ? 'Check-Out' : 'Return';
   var values = [[
     row.date,
@@ -726,7 +734,7 @@ async function logToSheet(ft, row) {
     + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
   var res = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: 'Bearer ' + _gt, 'Content-Type': 'application/json' },
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
     body: JSON.stringify({ values: values })
   });
   if (!res.ok) {
