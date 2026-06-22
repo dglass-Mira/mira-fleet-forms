@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Final Test — Vehicle Form</title>
+<title>Mira google test — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -607,8 +607,8 @@ function generatePDF(ft) {
 }
 
 // ── SUBMIT ───────────────────────────────────────────────
-var _gt = sessionStorage.getItem('_gt') || null;
-var _gte = parseInt(sessionStorage.getItem('_gte')||'0');
+var _gt = localStorage.getItem('_gt') || null;
+var _gte = parseInt(localStorage.getItem('_gte')||'0');
 
 function setStatus(ft, msg) {
   document.getElementById((ft==='checkout'?'co':'ret')+'-status').textContent = msg;
@@ -669,8 +669,8 @@ async function uploadDrive(blob, fname) {
         if (resp.error) { reject(new Error(resp.error)); return; }
         _gt = resp.access_token;
         _gte = Date.now() + 55*60*1000;
-        sessionStorage.setItem('_gt', _gt);
-        sessionStorage.setItem('_gte', String(_gte));
+        localStorage.setItem('_gt', _gt);
+        localStorage.setItem('_gte', String(_gte));
         try { resolve(await doUpload(blob, fname, _gt)); }
         catch(e) { reject(e); }
       },
