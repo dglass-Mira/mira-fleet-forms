@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>LOG Test 1 Home — Vehicle Form</title>
+<title>L-test final — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -730,7 +730,7 @@ async function logToSheet(ft, row, token) {
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/'
     + SETTINGS.sheet_id
     + '/values/'
-    + encodeURIComponent(SETTINGS.sheet_tab)
+    + encodeURIComponent(SETTINGS.sheet_tab + '!A:G')
     + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
   var res = await fetch(url, {
     method: 'POST',
