@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Dave — Vehicle Form</title>
+<title>Mira Testing — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -562,7 +562,14 @@ function generatePDF(ft) {
     if (pad && pad.hasSig()) {
       var img = pad.getDataURL();
       console.log('img length:', img.length, 'starts:', img.substring(0,25));
-      doc.addImage(img, 'PNG', sx+1, by+2, sw-2, sh-2);
+      try {
+        // Strip the data URL prefix — pass raw base64 directly to jsPDF
+        var b64 = img.replace(/^data:image\/png;base64,/, '');
+        doc.addImage(b64, 'PNG', sx+1, by+2, sw-2, sh-2);
+        console.log('addImage succeeded');
+      } catch(e) {
+        console.error('addImage failed:', e);
+      }
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
       doc.text('No signature', sx+sw/2, by+sh/2+2, {align:'center'});
