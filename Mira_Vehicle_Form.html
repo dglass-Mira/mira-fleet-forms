@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Google test — Vehicle Form</title>
+<title>Mira Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -126,7 +126,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>HCS's Name</label><input type="text" id="co_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Initial)</label><input type="number" id="co_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="co_make_model"></div>
-          <div class="field"><label>Last 5 of VIN #</label><input type="text" id="co_vin5" maxlength="5" style="text-transform:uppercase"></div>
+          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="co_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
           <div class="field"><label>Fuel Card #</label><input type="text" id="co_fuel_card"></div>
@@ -195,7 +195,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>HCS's Name</label><input type="text" id="ret_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Return)</label><input type="number" id="ret_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="ret_make_model"></div>
-          <div class="field"><label>Last 5 of VIN #</label><input type="text" id="ret_vin5" maxlength="5" style="text-transform:uppercase"></div>
+          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="ret_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
           <div class="field"><label>Fuel Level at Return</label><input type="text" id="ret_fuel_level" placeholder="e.g. 3/4"></div>
@@ -469,7 +469,7 @@ function generatePDF(ft) {
     y+=9; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
     fld('Odometer (Initial)', document.getElementById('co_odometer').value, ML+half+4, y, half);
     y+=9; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
-    fld('Last 5 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
+    fld('Last 6 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
     y+=9; var t3=MW/3-2;
     fld('Fuel Card #', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
@@ -480,7 +480,7 @@ function generatePDF(ft) {
     y+=9; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
     fld('Odometer (Return)', document.getElementById('ret_odometer').value, ML+half+4, y, half);
     y+=9; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
-    fld('Last 5 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
+    fld('Last 6 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
     y+=9; var t3b=MW/3-2;
     fld('Fuel Level at Return', document.getElementById('ret_fuel_level').value, ML, y, t3b);
     fld('Miles Driven', document.getElementById('ret_miles').value, ML+t3b+3, y, t3b);
@@ -705,7 +705,7 @@ async function sendEmail(fname, ft, link) {
   var odo  = (document.getElementById(pfx+'_odometer')||{}).value||'--';
   var dmg  = (document.getElementById(pfx+'_damage')||{}).value||'None';
   var msg  = 'Vehicle '+fl+' form submitted.\n\n'+
-    'HCS Name: '+hcs+'\nLocation: '+loc+'\nVIN (last 5): '+vin+
+    'HCS Name: '+hcs+'\nLocation: '+loc+'\nVIN (last 6): '+vin+
     '\nOdometer: '+odo+'\nDamage Notes: '+dmg+
     '\nSubmitted: '+new Date().toLocaleString()+
     '\n\nView PDF: '+(link||'Not uploaded');
