@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mira Log Tes — Vehicle Form</title>
+<title>LOG Test1 Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
@@ -737,9 +737,10 @@ async function logToSheet(ft, row, token) {
     headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
     body: JSON.stringify({ values: values })
   });
+  var resText = await res.text();
+  console.log('Sheets API status:', res.status, 'response:', resText);
   if (!res.ok) {
-    var err = await res.text();
-    throw new Error('Sheets log failed: ' + err);
+    throw new Error('Sheets log failed: ' + resText);
   }
   showToast('Logged to Google Sheets');
 }
