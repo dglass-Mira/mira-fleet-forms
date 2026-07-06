@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 2.2 - Vehicle Checkout Form</title>
+<title>Mira Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -113,7 +113,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 <div id="page-checkout" class="page active">
   <div class="form-card">
     <div class="form-header">
-      <h2>Vehicle Check-Out Form</h2>
+      <h2>Version 2.3 — Vehicle Checkout Form</h2>
       <span class="badge" id="co-badge"></span>
     </div>
     <div class="section">
@@ -645,7 +645,9 @@ async function submitForm(ft) {
     var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     var dateObj = new Date((document.getElementById(pfx+'_date').value||dt)+'T00:00:00');
     var friendlyDate = dateObj.getFullYear()+'_'+MONTHS[dateObj.getMonth()]+'_'+(dateObj.getDate()<10?'0':'')+dateObj.getDate();
-    var fname = hcs+'_Mira_'+formType+'_'+friendlyDate+'.pdf';
+    var locRaw = (document.getElementById(pfx+'_location').value||'').trim();
+    var loc = locRaw.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    var fname = hcs+(loc?'_'+loc:'')+'_Mira_'+formType+'_'+friendlyDate+'.pdf';
     var blob = doc.output('blob');
 
     setStatus(ft, 'Saving to Drive & Sheets...');
