@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 2.5</title>
+<title>Version 2.6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -212,9 +212,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="ret_make_model"></div>
           <div class="field"><label>Last 6 of VIN #</label><input type="text" id="ret_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
-        <div class="field-grid cols3" style="margin-top:14px">
-          <div class="field"><label>Fuel Level at Return</label><input type="text" id="ret_fuel_level" placeholder="e.g. 3/4"></div>
-          <div class="field"><label>Miles Driven</label><input type="number" id="ret_miles"></div>
+        <div class="field-grid cols2" style="margin-top:14px">
           <div class="field"><label>Fuel Card Returned</label>
             <select id="ret_fuel_card"><option value="">Select</option><option>Yes</option><option>No</option></select>
           </div>
@@ -295,7 +293,7 @@ var LISTS = {
   'co-mechanical':['Engine Oil Level (Full, No Leaks)','Coolant Level (Within Range)','Brake Fluid Level (Within Range)','Washer Fluid Level'],
   'co-safety':    ['Spare Tire Present & Inflated','Jack & Lug Wrench Present','First Aid Kit Present','Fire Extinguisher Present & Charged'],
   'ret-exterior': ['Tires (No New Damage or Flats)','Lights & Signals (All Functioning)','Windshield & Mirrors (No New Damage)','Exterior Body (No New Dents or Scratches)','Vehicle Exterior Clean'],
-  'ret-interior': ['Interior Clean (No Trash, Stains, Damage)','Personal Belongings Removed','Seatbelts Intact','No Dash Warning Lights Illuminated'],
+  'ret-interior': ['Interior Clean (No Trash, Stains, Damage)','Personal Belongings Removed','No Dash Warning Lights Illuminated'],
   'ret-docs':     ['Vehicle Keys Returned','Registration & Insurance Card In Vehicle','Fuel Card Returned','Incident / Accident Report Filed (if applicable)'],
 };
 
