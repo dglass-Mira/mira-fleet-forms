@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Vehicle Checkout Form  - Version 2.1</title>
+<title>Vehicle Checkout Form  - Version 2.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -639,7 +639,13 @@ async function submitForm(ft) {
     var pfx = ft==='checkout'?'co':'ret';
     var vin = (document.getElementById(pfx+'_vin5').value||'UNKNOWN').toUpperCase();
     var dt  = document.getElementById(pfx+'_date').value || new Date().toISOString().slice(0,10);
-    var fname = 'Mira_Vehicle_'+(ft==='checkout'?'CheckOut':'Return')+'_'+vin+'_'+dt+'.pdf';
+    var hcsRaw = (document.getElementById(pfx+'_hcs_name').value||'Unknown').trim();
+    var hcs = hcsRaw.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    var formType = ft==='checkout' ? 'CheckOut_Form' : 'Return_Form';
+    var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var dateObj = new Date((document.getElementById(pfx+'_date').value||dt)+'T00:00:00');
+    var friendlyDate = dateObj.getFullYear()+'_'+MONTHS[dateObj.getMonth()]+'_'+(dateObj.getDate()<10?'0':'')+dateObj.getDate();
+    var fname = hcs+'_Mira_'+formType+'_'+friendlyDate+'.pdf';
     var blob = doc.output('blob');
 
     setStatus(ft, 'Saving to Drive & Sheets...');
