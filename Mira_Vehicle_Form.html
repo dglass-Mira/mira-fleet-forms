@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 2.81</title>
+<title>Version 3.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -74,6 +74,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 .modal-msg{font-size:13px;color:var(--gray4);margin-bottom:24px;line-height:1.5}
 .modal-btn{background:var(--navy);color:white;border:none;border-radius:6px;padding:12px 36px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 .modal-btn:hover{background:var(--navy-mid)}
+.photo-section{padding:16px 20px}
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.photo-thumb{position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;border:1.5px solid var(--gray3);background:var(--gray2)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(192,57,43,.88);color:white;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.photo-add{border:2px dashed var(--gray3);border-radius:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--gray4);font-size:12px;font-weight:600;background:var(--gray1);aspect-ratio:4/3;transition:border-color .15s;-webkit-tap-highlight-color:transparent}
+.photo-add:hover{border-color:var(--navy-mid);color:var(--navy-mid)}
+.photo-add .ph-icon{font-size:24px}
+.photo-count{font-size:11px;color:var(--gray4);margin-bottom:2px;font-weight:600}
 @media(max-width:600px){
   .cols2,.cols3{grid-template-columns:1fr}
   .cl-header{grid-template-columns:1fr 40px 40px 40px 70px;font-size:9px}
@@ -113,7 +122,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 <div id="page-checkout" class="page active">
   <div class="form-card">
     <div class="form-header">
-      <h2>Vehicle Checkout Form</h2>
+      <h2>Version 3.0 — Vehicle Checkout Form</h2>
       <span class="badge" id="co-badge"></span>
     </div>
     <div class="section">
@@ -160,6 +169,18 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
     <div class="section">
       <div class="section-title">Pre-Existing Damage Notes</div>
       <div class="section-body"><div class="field"><textarea id="co_damage" placeholder="Describe any pre-existing damage..."></textarea></div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Vehicle Photos</div>
+      <div class="photo-section">
+        <div class="photo-count" id="co-photo-count">0 / 8 photos</div>
+        <div class="photo-grid" id="co-photo-grid">
+          <div class="photo-add" id="co-photo-add" onclick="document.getElementById('co_photo_input').click()">
+            <span class="ph-icon">📷</span><span>Add Photo</span>
+          </div>
+        </div>
+        <input type="file" accept="image/*" multiple id="co_photo_input" style="display:none" onchange="addPhotos('checkout',this)">
+      </div>
     </div>
     <div class="section">
       <div class="section-title">Sign-Off</div>
@@ -231,6 +252,18 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
     <div class="section">
       <div class="section-title">New Damage / Incident Notes</div>
       <div class="section-body"><div class="field"><textarea id="ret_damage" placeholder="Describe any new damage or incidents..."></textarea></div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Vehicle Photos</div>
+      <div class="photo-section">
+        <div class="photo-count" id="ret-photo-count">0 / 8 photos</div>
+        <div class="photo-grid" id="ret-photo-grid">
+          <div class="photo-add" id="ret-photo-add" onclick="document.getElementById('ret_photo_input').click()">
+            <span class="ph-icon">📷</span><span>Add Photo</span>
+          </div>
+        </div>
+        <input type="file" accept="image/*" multiple id="ret_photo_input" style="display:none" onchange="addPhotos('return',this)">
+      </div>
     </div>
     <div class="section">
       <div class="section-title">Sign-Off</div>
@@ -328,6 +361,72 @@ function tap(btn) {
   btn.classList.add('sel-' + val);
 }
 
+// ── PHOTOS ───────────────────────────────────────────────
+var photos = { checkout: [], 'return': [] };
+
+function addPhotos(ft, input) {
+  var arr = photos[ft];
+  var remaining = 8 - arr.length;
+  Array.from(input.files).slice(0, remaining).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) { arr.push(e.target.result); renderPhotos(ft); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removePhoto(ft, idx) {
+  photos[ft].splice(idx, 1);
+  renderPhotos(ft);
+}
+
+function renderPhotos(ft) {
+  var pfx = ft === 'checkout' ? 'co' : 'ret';
+  var grid  = document.getElementById(pfx+'-photo-grid');
+  var count = document.getElementById(pfx+'-photo-count');
+  var arr   = photos[ft];
+  grid.innerHTML = '';
+  arr.forEach(function(src, i) {
+    var d = document.createElement('div');
+    d.className = 'photo-thumb';
+    var rm = document.createElement('button');
+    rm.className = 'photo-remove';
+    rm.innerHTML = '&#x2715;';
+    (function(f,n){ rm.onclick = function(){ removePhoto(f,n); }; })(ft, i);
+    var im = document.createElement('img');
+    im.src = src; im.alt = 'photo '+(i+1);
+    d.appendChild(im);
+    d.appendChild(rm);
+    grid.appendChild(d);
+  });
+  if (arr.length < 8) {
+    var btn = document.createElement('div');
+    btn.className = 'photo-add';
+    btn.innerHTML = '<span class="ph-icon">📷</span><span>Add Photo</span>';
+    btn.onclick = function() { document.getElementById(pfx+'_photo_input').click(); };
+    grid.appendChild(btn);
+  }
+  count.textContent = arr.length + ' / 8 photos';
+}
+
+// Resize an image data URL for PDF embedding (~200dpi for the cell size used)
+function resizeForPDF(dataUrl) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var maxW = 400, maxH = 300;
+      var scale = Math.min(maxW/img.width, maxH/img.height, 1);
+      var c = document.createElement('canvas');
+      c.width  = Math.round(img.width  * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.78));
+    };
+    img.onerror = function() { resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
+
 // ── SIGNATURE PADS ───────────────────────────────────────
 var pads = {};
 
@@ -423,7 +522,7 @@ function switchTab(t) {
 }
 
 // ── PDF GENERATION ───────────────────────────────────────
-function generatePDF(ft) {
+async function generatePDF(ft) {
   var jsPDF = window.jspdf.jsPDF;
   var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
   var PW=215.9, PH=279.4, ML=14, MR=201.9, MW=187.9;
@@ -558,6 +657,35 @@ function generatePDF(ft) {
   if (dmg) doc.text(doc.splitTextToSize(dmg,MW-4), ML+2, y+5);
   y += 20;
 
+  // Vehicle Photos
+  var photoArr = photos[ft];
+  if (photoArr.length > 0) {
+    var pCols = 4, pW = (MW - (pCols-1)*3) / pCols, pH = pW * 0.75;
+    var pRows = Math.ceil(photoArr.length / pCols);
+    var photoBlockH = 10 + pRows * (pH + 3) + 4;
+    if (y + photoBlockH > PH - 12) {
+      doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
+      doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records',PW/2,PH-4.5,{align:'center'});
+      doc.addPage();
+      doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.text('MIRA HOME',ML,11);
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.text('FLEET SERVICES',ML,15.5);
+      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.text(title,MR,11,{align:'right'});
+      y = 24;
+    }
+    secHdr('Vehicle Photos');
+    y += 3;
+    for (var pi = 0; pi < photoArr.length; pi++) {
+      var pcol = pi % pCols, prow = Math.floor(pi / pCols);
+      var px = ML + pcol * (pW + 3), py = y + prow * (pH + 3);
+      var resized = await resizeForPDF(photoArr[pi]);
+      doc.addImage(resized, 'JPEG', px, py, pW, pH);
+    }
+    y += pRows * (pH + 3) + 4;
+  }
+
   // Sign-off — needs ~72mm: header + label + box (38) + date + footer clearance
   var sigBlockNeeded = 72;
   if (y + sigBlockNeeded > PH - 12) {
@@ -631,7 +759,7 @@ async function submitForm(ft) {
   btn.disabled = true;
   setStatus(ft, 'Generating PDF...');
   try {
-    var doc = generatePDF(ft);
+    var doc = await generatePDF(ft);
     var pfx = ft==='checkout'?'co':'ret';
     var vin = (document.getElementById(pfx+'_vin5').value||'UNKNOWN').toUpperCase();
     var dt  = document.getElementById(pfx+'_date').value || new Date().toISOString().slice(0,10);
