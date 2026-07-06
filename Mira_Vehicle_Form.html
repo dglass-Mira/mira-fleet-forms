@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 2.7</title>
+<title>Version 2.8</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -155,7 +155,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="cl-header"><span>Inspection Item</span><span>Pass</span><span>Fail</span><span>N/A</span><span>Notes</span></div>
       <div class="cl-sub">Exterior Checks</div><div id="co-exterior"></div>
       <div class="cl-sub">Interior Checks</div><div id="co-interior"></div>
-      <div class="cl-sub">Under the Hood / Mechanical</div><div id="co-mechanical"></div>
       <div class="cl-sub">Safety Equipment</div><div id="co-safety"></div>
     </div>
     <div class="section">
@@ -290,7 +289,6 @@ var SETTINGS = {
 var LISTS = {
   'co-exterior':  ['Tires (Tread Depth, Pressure, No Visible Damage)','Headlights, Brake Lights & Turn Signals','Windshield (No Cracks) & Wipers Functioning','Exterior Body (No New Dents, Scratches, Damage)'],
   'co-interior':  ['Seatbelts (All Functional, Not Frayed)','Horn (Functioning Properly)','Dash Warning Lights (None Illuminated)','Air Conditioning / Heating','Interior Cleanliness (No Trash, Damage)','Registration & Insurance Card Present in Vehicle'],
-  'co-mechanical':['Engine Oil Level (Full, No Leaks)','Coolant Level (Within Range)','Brake Fluid Level (Within Range)','Washer Fluid Level'],
   'co-safety':    ['Spare Tire Present & Inflated','Jack & Lug Wrench Present','First Aid Kit Present','Fire Extinguisher Present & Charged'],
   'ret-exterior': ['Tires (No New Damage or Flats)','Lights & Signals (All Functioning)','Windshield & Mirrors (No New Damage)','Exterior Body (No New Dents or Scratches)','Vehicle Exterior Clean'],
   'ret-interior': ['Interior Clean (No Trash, Stains, Damage)','Personal Belongings Removed','No Dash Warning Lights Illuminated'],
@@ -518,7 +516,7 @@ function generatePDF(ft) {
   y += 5;
 
   var groups = isco
-    ? [['Exterior Checks','co-exterior'],['Interior Checks','co-interior'],['Under the Hood / Mechanical','co-mechanical'],['Safety Equipment','co-safety']]
+    ? [['Exterior Checks','co-exterior'],['Interior Checks','co-interior'],['Safety Equipment','co-safety']]
     : [['Exterior Condition','ret-exterior'],['Interior Condition','ret-interior'],['Documents & Keys','ret-docs']];
 
   groups.forEach(function(g) {
