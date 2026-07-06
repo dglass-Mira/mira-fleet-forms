@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 3.01</title>
+<title>Version 3.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -130,7 +130,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="section-body">
         <div class="field-grid cols2">
           <div class="field"><label>Date</label><input type="date" id="co_date"></div>
-          <div class="field"><label>Location / Branch</label><input type="text" id="co_location" placeholder="e.g. Atlanta"></div>
+          <div class="field"><label>Location / Branch</label><select id="co_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
           <div class="field"><label>HCS's Name</label><input type="text" id="co_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Initial)</label><input type="number" id="co_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="co_make_model"></div>
@@ -226,7 +226,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="section-body">
         <div class="field-grid cols2">
           <div class="field"><label>Return Date</label><input type="date" id="ret_date"></div>
-          <div class="field"><label>Return Location / Branch</label><input type="text" id="ret_location"></div>
+          <div class="field"><label>Return Location / Branch</label><select id="ret_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
           <div class="field"><label>HCS's Name</label><input type="text" id="ret_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Return)</label><input type="number" id="ret_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="ret_make_model"></div>
