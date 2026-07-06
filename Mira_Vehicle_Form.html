@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ver 2.0 — Vehicle Form</title>
+<title>Version 2.1 — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -562,7 +562,28 @@ function generatePDF(ft) {
   if (dmg) doc.text(doc.splitTextToSize(dmg,MW-4), ML+2, y+5);
   y += 20;
 
-  // Sign-off
+  // Sign-off — needs ~72mm: header + label + box (38) + date + footer clearance
+  var sigBlockNeeded = 72;
+  if (y + sigBlockNeeded > PH - 12) {
+    // Draw footer on current page before breaking
+    doc.setFillColor.apply(doc, NAVY);
+    doc.rect(0, PH-10, PW, 10, 'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records', PW/2, PH-4.5, {align:'center'});
+    // New page with repeated header
+    doc.addPage();
+    doc.setFillColor.apply(doc, NAVY);
+    doc.rect(0, 0, PW, 18, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(14); doc.setFont('helvetica','bold');
+    doc.text('MIRA HOME', ML, 11);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('FLEET SERVICES', ML, 15.5);
+    doc.setFontSize(12); doc.setFont('helvetica','bold');
+    doc.text(title, MR, 11, {align:'right'});
+    y = 24;
+  }
+
   secHdr('Sign-Off');
   y += 3;
   var sw = MW/2-6, sh = 38;
