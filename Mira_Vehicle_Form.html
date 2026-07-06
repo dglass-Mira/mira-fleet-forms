@@ -6,7 +6,6 @@
 <title>Mira Home — Vehicle Form</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
 <style>
 :root {
   --navy:#1B3A6B; --navy-mid:#2E5FA3; --navy-light:#E4EAF4;
@@ -262,12 +261,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 <script>
 // ── SETTINGS ─────────────────────────────────────────────
 var SETTINGS = {
-  email:              'dglass@mirapest.com',
-  emailjs_service:    'service_msb3wfd',
-  emailjs_template:   'template_nhv21fd',
-  emailjs_key:        'KBaa4T5WwOtfhW781',
-  drive_folder:       '1QC9uRFEd6d_Yx6MQozhJyzoul-AET-dY',
-  google_client:      '373220643241-ob1aaiqp7v6kfalug49jtfkvgf00a474.apps.googleusercontent.com',
+  email:           'dglass@mirapest.com',
+  emailjs_service: 'service_msb3wfd',
+  emailjs_template:'template_nhv21fd',
+  emailjs_key:     'KBaa4T5WwOtfhW781',
+  // Paste your deployed Apps Script URL here after following setup instructions
+  apps_script_url: 'https://script.google.com/macros/s/AKfycbxDWThcCkdBTzw-TUqW1e3pw4A0KfTfBS3c7dIVHro1qTFYffkVjicVefK8ehaemfVa/exec',
 };
 
 // ── CHECKLISTS ───────────────────────────────────────────
@@ -323,24 +322,31 @@ function initPad(id) {
   var hint = document.getElementById('hint-' + id);
   if (!canvas || !wrap) return;
 
+  var dpr = window.devicePixelRatio || 1;
+  var hasSig = false;
+
+  // size() resets canvas dimensions (clears it) and re-applies the DPR scale transform
   function size() {
     var w = wrap.offsetWidth || 400;
     var h = wrap.offsetHeight || 110;
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    var c = canvas.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0); // reset any previous transform
+    c.scale(dpr, dpr);                 // draw in CSS-pixel space going forward
+    c.strokeStyle = '#1A2233';
+    c.lineWidth   = 2;
+    c.lineCap     = 'round';
+    c.lineJoin    = 'round';
   }
   size();
 
+  // canvas.getContext always returns the same context object; it now has dpr scale baked in
   var ctx = canvas.getContext('2d');
-  ctx.strokeStyle = '#1A2233';
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  var drawing = false, px = 0, py = 0, hasSig = false;
+  var drawing = false, px = 0, py = 0;
 
   function pos(e) {
-    var r = canvas.getBoundingClientRect();
+    var r   = canvas.getBoundingClientRect();
     var src = e.touches ? e.touches[0] : e;
     return { x: src.clientX - r.left, y: src.clientY - r.top };
   }
@@ -349,6 +355,8 @@ function initPad(id) {
     drawing = true;
     var p = pos(e); px = p.x; py = p.y;
     ctx.beginPath(); ctx.moveTo(px, py);
+    // Mark as signed on first contact — catches taps that produce very little movement
+    if (!hasSig) { hasSig = true; hint.style.display = 'none'; }
   }
   function move(e) {
     if (!drawing) return;
@@ -357,34 +365,34 @@ function initPad(id) {
     ctx.lineTo(p.x, p.y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(p.x, p.y);
     px = p.x; py = p.y;
-    if (!hasSig) { hasSig = true; hint.style.display = 'none'; }
   }
   function up() { drawing = false; }
 
   canvas.addEventListener('mousedown', down, {passive:false});
   canvas.addEventListener('mousemove', move, {passive:false});
-  canvas.addEventListener('mouseup', up);
-  canvas.addEventListener('mouseleave', up);
-  canvas.addEventListener('touchstart', down, {passive:false});
+  canvas.addEventListener('mouseup',   up);
+  canvas.addEventListener('mouseleave',up);
+  canvas.addEventListener('touchstart',down, {passive:false});
   canvas.addEventListener('touchmove', move, {passive:false});
-  canvas.addEventListener('touchend', up);
+  canvas.addEventListener('touchend',  up);
 
   pads[id] = {
     hasSig: function() { return hasSig; },
     getDataURL: function() {
-      // composite onto white bg so jsPDF can read it
+      // Blit onto a solid background canvas — PNG is lossless and more reliable in jsPDF
       var tmp = document.createElement('canvas');
-      tmp.width = canvas.width; tmp.height = canvas.height;
+      tmp.width  = canvas.width;
+      tmp.height = canvas.height;
       var tc = tmp.getContext('2d');
       tc.fillStyle = '#EEF3FA';
       tc.fillRect(0, 0, tmp.width, tmp.height);
       tc.drawImage(canvas, 0, 0);
-      return tmp.toDataURL('image/jpeg', 0.95);
+      return tmp.toDataURL('image/png');
     },
     clear: function() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       hasSig = false;
       hint.style.display = '';
+      size(); // reset canvas dimensions → clears it, then reapply scale + styles
     }
   };
 }
@@ -549,11 +557,9 @@ function generatePDF(ft) {
     doc.setDrawColor.apply(doc,NAVY); doc.setLineWidth(0.5);
     doc.rect(sx, by+1, sw, sh, 'S');
     var pad = pads[padId];
-    console.log('drawSigBox', padId, 'pad found:', !!pad, 'hasSig:', pad?pad.hasSig():false, 'pads keys:', Object.keys(pads));
     if (pad && pad.hasSig()) {
       var img = pad.getDataURL();
-      console.log('img length:', img.length, 'starts:', img.substring(0,25));
-      doc.addImage(img, 'JPEG', sx+1, by+2, sw-2, sh-2);
+      doc.addImage(img, 'PNG',  sx+1, by+2, sw-2, sh-2);
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
       doc.text('No signature', sx+sw/2, by+sh/2+2, {align:'center'});
@@ -578,8 +584,7 @@ function generatePDF(ft) {
 }
 
 // ── SUBMIT ───────────────────────────────────────────────
-var _gt = sessionStorage.getItem('_gt') || null;
-var _gte = parseInt(sessionStorage.getItem('_gte')||'0');
+
 
 function setStatus(ft, msg) {
   document.getElementById((ft==='checkout'?'co':'ret')+'-status').textContent = msg;
@@ -597,18 +602,20 @@ async function submitForm(ft) {
     var fname = 'Mira_Vehicle_'+(ft==='checkout'?'CheckOut':'Return')+'_'+vin+'_'+dt+'.pdf';
     var blob = doc.output('blob');
 
-    setStatus(ft,'Uploading to Google Drive...');
-    var link = await uploadDrive(blob, fname);
+    setStatus(ft, 'Saving to Drive & Sheets...');
+    var link = await submitToAppsScript(blob, fname, ft);
+    showToast('Saved to Drive & logged to Sheets');
 
-    setStatus(ft,'Sending email...');
+    setStatus(ft, 'Sending email...');
     await sendEmail(fname, ft, link);
 
-    document.getElementById('modal-msg').textContent = 'Saved to Google Drive and email sent to '+SETTINGS.email+'.';
+    document.getElementById('modal-msg').textContent =
+      'PDF saved to Google Drive, row logged to Sheets, and confirmation email sent to ' + SETTINGS.email + '.';
     document.getElementById('modal').classList.add('show');
   } catch(e) {
     console.error(e);
-    setStatus(ft, 'Error: '+e.message);
-    showToast('Error: '+e.message, true);
+    setStatus(ft, 'Error: ' + e.message);
+    showToast('Error: ' + e.message, true);
     btn.disabled = false;
   }
 }
@@ -618,51 +625,59 @@ function closeModal() {
   window.location.reload();
 }
 
-// ── GOOGLE DRIVE ─────────────────────────────────────────
-async function uploadDrive(blob, fname) {
-  // Wait for google to load
-  var waited = 0;
-  while ((!window.google || !window.google.accounts) && waited < 5000) {
-    await new Promise(function(r){setTimeout(r,200);}); waited+=200;
-  }
-  if (!window.google || !window.google.accounts) throw new Error('Google sign-in not available');
-
-  // Use cached token if valid
-  if (_gt && Date.now() < _gte) {
-    return await doUpload(blob, fname, _gt);
-  }
-
+// ── APPS SCRIPT SUBMIT ───────────────────────────────────
+// Converts a PDF Blob to a base64 string (strips the data-URL prefix)
+function blobToBase64(blob) {
   return new Promise(function(resolve, reject) {
-    var tc = google.accounts.oauth2.initTokenClient({
-      client_id: SETTINGS.google_client,
-      scope: 'https://www.googleapis.com/auth/drive.file',
-      callback: async function(resp) {
-        if (resp.error) { reject(new Error(resp.error)); return; }
-        _gt = resp.access_token;
-        _gte = Date.now() + 55*60*1000;
-        sessionStorage.setItem('_gt', _gt);
-        sessionStorage.setItem('_gte', String(_gte));
-        try { resolve(await doUpload(blob, fname, _gt)); }
-        catch(e) { reject(e); }
-      },
-      error_callback: function(e) { reject(new Error(e.message||e.type)); }
-    });
-    tc.requestAccessToken({prompt:''});
+    var reader = new FileReader();
+    reader.onloadend = function() { resolve(reader.result.split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 }
 
-async function doUpload(blob, name, token) {
-  var meta = {name:name, mimeType:'application/pdf', parents:[SETTINGS.drive_folder]};
-  var form = new FormData();
-  form.append('metadata', new Blob([JSON.stringify(meta)],{type:'application/json'}));
-  form.append('file', blob);
-  var res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',{
-    method:'POST', headers:{Authorization:'Bearer '+token}, body:form
+// Builds the Sheets row array from current form fields
+function buildRow(ft) {
+  var isco = ft === 'checkout';
+  var pfx  = isco ? 'co' : 'ret';
+  function v(id) { return (document.getElementById(id)||{}).value || ''; }
+  var rental = '';
+  if (isco) {
+    var ry = document.getElementById('co_rental_yes');
+    rental = (ry && ry.checked) ? 'Yes' : 'No';
+  }
+  return [
+    v(pfx+'_date'),
+    v(pfx+'_location'),
+    v(pfx+'_hcs_name'),
+    v(pfx+'_make_model'),
+    (v(pfx+'_vin5')).toUpperCase(),
+    v(pfx+'_fuel_card'),
+    v(pfx+'_plate'),
+    v(pfx+'_phone'),
+    v(pfx+'_driver_email'),
+    rental
+    // Drive link is appended server-side by Apps Script
+  ];
+}
+
+// Posts PDF + form data to the Apps Script web app.
+// No Google sign-in required from the user — the script runs under Dave's account.
+async function submitToAppsScript(blob, fname, ft) {
+  if (!SETTINGS.apps_script_url || SETTINGS.apps_script_url.startsWith('PASTE')) {
+    throw new Error('Apps Script URL not configured in SETTINGS');
+  }
+  var b64 = await blobToBase64(blob);
+  // No Content-Type header → "simple" CORS request, no preflight needed
+  var res = await fetch(SETTINGS.apps_script_url, {
+    method: 'POST',
+    redirect: 'follow',
+    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft) })
   });
-  if (!res.ok) throw new Error('Drive upload failed: '+res.statusText);
-  var data = await res.json();
-  showToast('Saved to Google Drive');
-  return data.webViewLink || 'https://drive.google.com/file/d/'+data.id+'/view';
+  if (!res.ok) throw new Error('Server error: ' + res.status);
+  var result = await res.json();
+  if (!result.ok) throw new Error(result.error || 'Apps Script error');
+  return result.link; // Drive share link
 }
 
 // ── EMAILJS ──────────────────────────────────────────────
