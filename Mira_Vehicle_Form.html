@@ -84,36 +84,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
   .form-card{margin:12px 8px}
   .btn{width:100%}
 }
-
-  /* ── RENTAL CHECKBOX ── */
-  .rental-field {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-  }
-  .rental-field label { margin-bottom: 6px; }
-  .rental-toggle {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    height: 28px;
-  }
-  .rental-toggle label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--navy);
-    cursor: pointer;
-    margin: 0;
-  }
-  .rental-toggle input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--navy);
-    cursor: pointer;
-  }
 </style>
 </head>
 <body>
@@ -156,22 +126,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>HCS's Name</label><input type="text" id="co_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Initial)</label><input type="number" id="co_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="co_make_model"></div>
-          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="co_vin5" maxlength="6" style="text-transform:uppercase"></div>
+          <div class="field"><label>Last 5 of VIN #</label><input type="text" id="co_vin5" maxlength="5" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
           <div class="field"><label>Fuel Card #</label><input type="text" id="co_fuel_card"></div>
           <div class="field"><label>License Plate</label><input type="text" id="co_plate"></div>
           <div class="field"><label>Driver Phone #</label><input type="tel" id="co_phone"></div>
-        </div>
-        <div class="field-grid cols2" style="margin-top:14px">
-          <div class="field"><label>Driver Email</label><input type="email" id="co_email" placeholder="e.g. driver@mirapest.com"></div>
-          <div class="field rental-field">
-            <label>Is this a Rental?</label>
-            <div class="rental-toggle">
-              <label><input type="checkbox" id="co_rental_yes" name="co_rental" onchange="if(this.checked)document.getElementById('co_rental_no').checked=false"> Yes</label>
-              <label><input type="checkbox" id="co_rental_no" name="co_rental" onchange="if(this.checked)document.getElementById('co_rental_yes').checked=false"> No</label>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -235,23 +195,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>HCS's Name</label><input type="text" id="ret_hcs_name"></div>
           <div class="field"><label>Odometer Reading (Return)</label><input type="number" id="ret_odometer"></div>
           <div class="field"><label>Vehicle Make / Model</label><input type="text" id="ret_make_model"></div>
-          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="ret_vin5" maxlength="6" style="text-transform:uppercase"></div>
+          <div class="field"><label>Last 5 of VIN #</label><input type="text" id="ret_vin5" maxlength="5" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
           <div class="field"><label>Fuel Level at Return</label><input type="text" id="ret_fuel_level" placeholder="e.g. 3/4"></div>
           <div class="field"><label>Miles Driven</label><input type="number" id="ret_miles"></div>
           <div class="field"><label>Fuel Card Returned</label>
             <select id="ret_fuel_card"><option value="">Select</option><option>Yes</option><option>No</option></select>
-          </div>
-        </div>
-        <div class="field-grid cols2" style="margin-top:14px">
-          <div class="field"><label>Driver Email</label><input type="email" id="ret_email" placeholder="e.g. driver@mirapest.com"></div>
-          <div class="field rental-field">
-            <label>Is this a Rental?</label>
-            <div class="rental-toggle">
-              <label><input type="checkbox" id="ret_rental_yes" name="ret_rental" onchange="if(this.checked)document.getElementById('ret_rental_no').checked=false"> Yes</label>
-              <label><input type="checkbox" id="ret_rental_no" name="ret_rental" onchange="if(this.checked)document.getElementById('ret_rental_yes').checked=false"> No</label>
-            </div>
           </div>
         </div>
       </div>
@@ -318,8 +268,6 @@ var SETTINGS = {
   emailjs_key:        'KBaa4T5WwOtfhW781',
   drive_folder:       '1QC9uRFEd6d_Yx6MQozhJyzoul-AET-dY',
   google_client:      '373220643241-ob1aaiqp7v6kfalug49jtfkvgf00a474.apps.googleusercontent.com',
-  sheet_id:           '1lSMKUViOp_zT_yilA2xMqcvPsYDAU2MMFifXizYzH04',
-  sheet_tab:          'Truck Checkouts',
 };
 
 // ── CHECKLISTS ───────────────────────────────────────────
@@ -376,15 +324,10 @@ function initPad(id) {
   if (!canvas || !wrap) return;
 
   function size() {
-    var dpr = window.devicePixelRatio || 1;
     var w = wrap.offsetWidth || 400;
     var h = wrap.offsetHeight || 110;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    var ctx2 = canvas.getContext('2d');
-    ctx2.scale(dpr, dpr);
+    canvas.width = w;
+    canvas.height = h;
   }
   size();
 
@@ -406,7 +349,6 @@ function initPad(id) {
     drawing = true;
     var p = pos(e); px = p.x; py = p.y;
     ctx.beginPath(); ctx.moveTo(px, py);
-    if (!hasSig) { hasSig = true; hint.style.display = 'none'; }
   }
   function move(e) {
     if (!drawing) return;
@@ -415,6 +357,7 @@ function initPad(id) {
     ctx.lineTo(p.x, p.y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(p.x, p.y);
     px = p.x; py = p.y;
+    if (!hasSig) { hasSig = true; hint.style.display = 'none'; }
   }
   function up() { drawing = false; }
 
@@ -429,20 +372,16 @@ function initPad(id) {
   pads[id] = {
     hasSig: function() { return hasSig; },
     getDataURL: function() {
-      // Normalize DPR: draw onto a CSS-pixel-sized canvas so jsPDF gets correct dimensions
-      var dpr = window.devicePixelRatio || 1;
-      var cssW = Math.round(canvas.width / dpr);
-      var cssH = Math.round(canvas.height / dpr);
+      // composite onto white bg so jsPDF can read it
       var tmp = document.createElement('canvas');
-      tmp.width = cssW; tmp.height = cssH;
+      tmp.width = canvas.width; tmp.height = canvas.height;
       var tc = tmp.getContext('2d');
       tc.fillStyle = '#EEF3FA';
       tc.fillRect(0, 0, tmp.width, tmp.height);
-      tc.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, cssW, cssH);
-      return tmp.toDataURL('image/png');
+      tc.drawImage(canvas, 0, 0);
+      return tmp.toDataURL('image/jpeg', 0.95);
     },
     clear: function() {
-      size(); // reapply DPR transform after clearing
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       hasSig = false;
       hint.style.display = '';
@@ -521,32 +460,22 @@ function generatePDF(ft) {
     y+=9; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
     fld('Odometer (Initial)', document.getElementById('co_odometer').value, ML+half+4, y, half);
     y+=9; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
-    fld('Last 6 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
+    fld('Last 5 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
     y+=9; var t3=MW/3-2;
     fld('Fuel Card #', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
-    y+=9;
-    var coEmailW = MW/2-3;
-    fld('Driver Email', document.getElementById('co_email').value, ML, y, coEmailW);
-    var coRental = document.getElementById('co_rental_yes').checked ? 'Yes' : document.getElementById('co_rental_no').checked ? 'No' : '';
-    fld('Is this a Rental?', coRental, ML+coEmailW+6, y, coEmailW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
     y+=9; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
     fld('Odometer (Return)', document.getElementById('ret_odometer').value, ML+half+4, y, half);
     y+=9; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
-    fld('Last 6 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
+    fld('Last 5 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
     y+=9; var t3b=MW/3-2;
     fld('Fuel Level at Return', document.getElementById('ret_fuel_level').value, ML, y, t3b);
     fld('Miles Driven', document.getElementById('ret_miles').value, ML+t3b+3, y, t3b);
     fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML+2*t3b+6, y, t3b);
-    y+=9;
-    var retEmailW = MW/2-3;
-    fld('Driver Email', document.getElementById('ret_email').value, ML, y, retEmailW);
-    var retRental = document.getElementById('ret_rental_yes').checked ? 'Yes' : document.getElementById('ret_rental_no').checked ? 'No' : '';
-    fld('Is this a Rental?', retRental, ML+retEmailW+6, y, retEmailW);
   }
   y += 10;
 
@@ -606,19 +535,7 @@ function generatePDF(ft) {
   if (dmg) doc.text(doc.splitTextToSize(dmg,MW-4), ML+2, y+5);
   y += 20;
 
-  // Sign-off — start a new page so signatures are never clipped
-  doc.addPage();
-  // Repeat header on page 2
-  doc.setFillColor.apply(doc, NAVY);
-  doc.rect(0, 0, PW, 18, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(14); doc.setFont('helvetica','bold');
-  doc.text('MIRA HOME', ML, 11);
-  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  doc.text('FLEET SERVICES', ML, 15.5);
-  doc.setFontSize(12); doc.setFont('helvetica','bold');
-  doc.text(title, MR, 11, {align:'right'});
-  y = 24;
+  // Sign-off
   secHdr('Sign-Off');
   y += 3;
   var sw = MW/2-6, sh = 38;
@@ -636,15 +553,7 @@ function generatePDF(ft) {
     if (pad && pad.hasSig()) {
       var img = pad.getDataURL();
       console.log('img length:', img.length, 'starts:', img.substring(0,25));
-      try {
-        // Strip the data URL prefix — pass raw base64 directly to jsPDF
-        var b64 = img.replace(/^data:image\/png;base64,/, '');
-        console.log('addImage coords:', 'x:', sx+1, 'y:', by+2, 'w:', sw-2, 'h:', sh-2, 'page:', doc.internal.getCurrentPageInfo().pageNumber);
-        doc.addImage(b64, 'PNG', sx+1, by+2, sw-2, sh-2);
-        console.log('addImage succeeded');
-      } catch(e) {
-        console.error('addImage failed:', e);
-      }
+      doc.addImage(img, 'JPEG', sx+1, by+2, sw-2, sh-2);
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
       doc.text('No signature', sx+sw/2, by+sh/2+2, {align:'center'});
@@ -669,8 +578,8 @@ function generatePDF(ft) {
 }
 
 // ── SUBMIT ───────────────────────────────────────────────
-var _gt = localStorage.getItem('_gt') || null;
-var _gte = parseInt(localStorage.getItem('_gte')||'0');
+var _gt = sessionStorage.getItem('_gt') || null;
+var _gte = parseInt(sessionStorage.getItem('_gte')||'0');
 
 function setStatus(ft, msg) {
   document.getElementById((ft==='checkout'?'co':'ret')+'-status').textContent = msg;
@@ -681,42 +590,18 @@ async function submitForm(ft) {
   btn.disabled = true;
   setStatus(ft, 'Generating PDF...');
   try {
-    console.log('submitForm: generating PDF');
     var doc = generatePDF(ft);
     var pfx = ft==='checkout'?'co':'ret';
     var vin = (document.getElementById(pfx+'_vin5').value||'UNKNOWN').toUpperCase();
     var dt  = document.getElementById(pfx+'_date').value || new Date().toISOString().slice(0,10);
     var fname = 'Mira_Vehicle_'+(ft==='checkout'?'CheckOut':'Return')+'_'+vin+'_'+dt+'.pdf';
     var blob = doc.output('blob');
-    console.log('submitForm: PDF ready, blob size:', blob.size);
 
     setStatus(ft,'Uploading to Google Drive...');
-    console.log('submitForm: starting Drive upload');
     var link = await uploadDrive(blob, fname);
-    console.log('submitForm: Drive upload done, link:', link);
-
-    setStatus(ft,'Logging to Google Sheets...');
-    console.log('submitForm: logging to Sheets, token present:', !!_gt);
-    var pfxEl = ft==='checkout'?'co':'ret';
-    await logToSheet(ft, {
-      date:      document.getElementById(pfxEl+'_date').value || dt,
-      location:  document.getElementById(pfxEl+'_location').value || '',
-      driver:    document.getElementById(pfxEl+'_hcs_name').value || '',
-      make:      document.getElementById(pfxEl+'_make_model').value || '',
-      vin:       vin,
-      fuel_card: document.getElementById(pfxEl+'_fuel_card').value || '',
-      plate:     document.getElementById(pfxEl+'_plate').value || '',
-      phone:     document.getElementById(pfxEl+'_phone').value || '',
-      email:     document.getElementById(pfxEl+'_email').value || '',
-      rental:    document.getElementById(pfxEl+'_rental_yes').checked ? 'Yes' : document.getElementById(pfxEl+'_rental_no').checked ? 'No' : '',
-      link:      link
-    }, _gt);
-    console.log('submitForm: Sheets logging done');
 
     setStatus(ft,'Sending email...');
-    console.log('submitForm: sending email');
     await sendEmail(fname, ft, link);
-    console.log('submitForm: email sent');
 
     document.getElementById('modal-msg').textContent = 'Saved to Google Drive and email sent to '+SETTINGS.email+'.';
     document.getElementById('modal').classList.add('show');
@@ -750,13 +635,13 @@ async function uploadDrive(blob, fname) {
   return new Promise(function(resolve, reject) {
     var tc = google.accounts.oauth2.initTokenClient({
       client_id: SETTINGS.google_client,
-      scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+      scope: 'https://www.googleapis.com/auth/drive.file',
       callback: async function(resp) {
         if (resp.error) { reject(new Error(resp.error)); return; }
         _gt = resp.access_token;
         _gte = Date.now() + 55*60*1000;
-        localStorage.setItem('_gt', _gt);
-        localStorage.setItem('_gte', String(_gte));
+        sessionStorage.setItem('_gt', _gt);
+        sessionStorage.setItem('_gte', String(_gte));
         try { resolve(await doUpload(blob, fname, _gt)); }
         catch(e) { reject(e); }
       },
@@ -780,40 +665,6 @@ async function doUpload(blob, name, token) {
   return data.webViewLink || 'https://drive.google.com/file/d/'+data.id+'/view';
 }
 
-// ── GOOGLE SHEETS ────────────────────────────────────────
-async function logToSheet(ft, row, token) {
-  var formType = ft === 'checkout' ? 'Check-Out' : 'Return';
-  var values = [[
-    row.date,
-    row.location,
-    row.driver,
-    row.make,
-    row.vin,
-    row.fuel_card,
-    row.plate,
-    row.phone,
-    row.email,
-    row.rental,
-    row.link
-  ]];
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'
-    + SETTINGS.sheet_id
-    + '/values/'
-    + encodeURIComponent(SETTINGS.sheet_tab + '!A:K')
-    + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: values })
-  });
-  var resText = await res.text();
-  console.log('Sheets API status:', res.status, 'response:', resText);
-  if (!res.ok) {
-    throw new Error('Sheets log failed: ' + resText);
-  }
-  showToast('Logged to Google Sheets');
-}
-
 // ── EMAILJS ──────────────────────────────────────────────
 async function sendEmail(fname, ft, link) {
   emailjs.init({publicKey: SETTINGS.emailjs_key});
@@ -825,7 +676,7 @@ async function sendEmail(fname, ft, link) {
   var odo  = (document.getElementById(pfx+'_odometer')||{}).value||'--';
   var dmg  = (document.getElementById(pfx+'_damage')||{}).value||'None';
   var msg  = 'Vehicle '+fl+' form submitted.\n\n'+
-    'HCS Name: '+hcs+'\nLocation: '+loc+'\nVIN (last 6): '+vin+
+    'HCS Name: '+hcs+'\nLocation: '+loc+'\nVIN (last 5): '+vin+
     '\nOdometer: '+odo+'\nDamage Notes: '+dmg+
     '\nSubmitted: '+new Date().toLocaleString()+
     '\n\nView PDF: '+(link||'Not uploaded');
