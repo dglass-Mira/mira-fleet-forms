@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 3.15</title>
+<title>Version 3.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -63,6 +63,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 .btn-primary{background:var(--navy);color:var(--white)}
 .btn-primary:hover{background:var(--navy-mid)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.field input.invalid,.field select.invalid{border-color:#C0392B;background:#FFF5F5;box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+.field label .req{color:#C0392B;margin-left:2px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 22px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(27,58,107,.55);z-index:500;align-items:center;justify-content:center}
@@ -129,20 +131,20 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="section-title">Vehicle Information</div>
       <div class="section-body">
         <div class="field-grid cols2">
-          <div class="field"><label>Date</label><input type="date" id="co_date"></div>
-          <div class="field"><label>Location / Branch</label><select id="co_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
-          <div class="field"><label>HCS's Name</label><input type="text" id="co_hcs_name"></div>
-          <div class="field"><label>Odometer Reading (Initial)</label><input type="number" id="co_odometer"></div>
-          <div class="field"><label>Vehicle Make / Model</label><input type="text" id="co_make_model"></div>
-          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="co_vin5" maxlength="6" style="text-transform:uppercase"></div>
+          <div class="field"><label>Date<span class="req">*</span></label><input type="date" id="co_date"></div>
+          <div class="field"><label>Location / Branch<span class="req">*</span></label><select id="co_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
+          <div class="field"><label>HCS's Name<span class="req">*</span></label><input type="text" id="co_hcs_name"></div>
+          <div class="field"><label>Odometer Reading (Initial)<span class="req">*</span></label><input type="number" id="co_odometer"></div>
+          <div class="field"><label>Vehicle Make / Model<span class="req">*</span></label><input type="text" id="co_make_model"></div>
+          <div class="field"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="co_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
-          <div class="field"><label>Fuel Card #</label><input type="text" id="co_fuel_card"></div>
-          <div class="field"><label>License Plate</label><input type="text" id="co_plate"></div>
-          <div class="field"><label>Driver Phone #</label><input type="tel" id="co_phone"></div>
+          <div class="field"><label>Fuel Card #<span class="req">*</span></label><input type="text" id="co_fuel_card"></div>
+          <div class="field"><label>License Plate<span class="req">*</span></label><input type="text" id="co_plate"></div>
+          <div class="field"><label>Driver Phone #<span class="req">*</span></label><input type="tel" id="co_phone"></div>
         </div>
         <div class="field-grid" style="margin-top:14px">
-          <div class="field"><label>Driver Email</label><input type="email" id="co_driver_email" placeholder="driver@example.com"></div>
+          <div class="field"><label>Driver Email<span class="req">*</span></label><input type="email" id="co_driver_email" placeholder="driver@example.com"></div>
         </div>
         <div class="field-grid cols2" style="margin-top:14px">
           <div class="field">
@@ -229,12 +231,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="section-title">Vehicle Information</div>
       <div class="section-body">
         <div class="field-grid cols2">
-          <div class="field"><label>Return Date</label><input type="date" id="ret_date"></div>
-          <div class="field"><label>Return Location / Branch</label><select id="ret_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
-          <div class="field"><label>HCS's Name</label><input type="text" id="ret_hcs_name"></div>
-          <div class="field"><label>Odometer Reading (Return)</label><input type="number" id="ret_odometer"></div>
-          <div class="field"><label>Vehicle Make / Model</label><input type="text" id="ret_make_model"></div>
-          <div class="field"><label>Last 6 of VIN #</label><input type="text" id="ret_vin5" maxlength="6" style="text-transform:uppercase"></div>
+          <div class="field"><label>Return Date<span class="req">*</span></label><input type="date" id="ret_date"></div>
+          <div class="field"><label>Return Location / Branch<span class="req">*</span></label><select id="ret_location"><option value="">Select Branch</option><option>Atlanta North</option><option>Atlanta South</option><option>Cincinnati</option><option>Cleveland</option><option>Columbus</option><option>Chicago</option><option>Detroit</option><option>Grand Rapids</option><option>Indianapolis</option><option>Louisville</option><option>N Indiana</option><option>Orlando</option><option>Tampa</option><option>Utah</option></select></div>
+          <div class="field"><label>HCS's Name<span class="req">*</span></label><input type="text" id="ret_hcs_name"></div>
+          <div class="field"><label>Odometer Reading (Return)<span class="req">*</span></label><input type="number" id="ret_odometer"></div>
+          <div class="field"><label>Vehicle Make / Model<span class="req">*</span></label><input type="text" id="ret_make_model"></div>
+          <div class="field"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="ret_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols2" style="margin-top:14px">
           <div class="field"><label>Fuel Card Returned</label>
@@ -242,7 +244,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           </div>
         </div>
         <div class="field-grid" style="margin-top:14px">
-          <div class="field"><label>Driver Email</label><input type="email" id="ret_driver_email" placeholder="driver@example.com"></div>
+          <div class="field"><label>Driver Email<span class="req">*</span></label><input type="email" id="ret_driver_email" placeholder="driver@example.com"></div>
         </div>
       </div>
     </div>
@@ -767,9 +769,31 @@ function setStatus(ft, msg) {
   document.getElementById((ft==='checkout'?'co':'ret')+'-status').textContent = msg;
 }
 
+function validateVehicleInfo(ft) {
+  var ids = ft === 'checkout'
+    ? ['co_date','co_location','co_hcs_name','co_odometer','co_make_model','co_vin5','co_fuel_card','co_plate','co_phone','co_driver_email']
+    : ['ret_date','ret_location','ret_hcs_name','ret_odometer','ret_make_model','ret_vin5','ret_driver_email'];
+  var valid = true, firstBad = null;
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var empty = !el.value || !el.value.trim();
+    el.classList.toggle('invalid', empty);
+    if (empty && !firstBad) firstBad = el;
+    else if (!empty) valid = valid && true;
+    if (empty) valid = false;
+  });
+  if (!valid) {
+    showToast('Please fill in all required fields marked with *', true);
+    if (firstBad) firstBad.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+  return valid;
+}
+
 async function submitForm(ft) {
   var btn = document.getElementById((ft==='checkout'?'co':'ret')+'-submit');
   btn.disabled = true;
+  if (!validateVehicleInfo(ft)) { btn.disabled = false; return; }
   setStatus(ft, 'Generating PDF...');
   try {
     var doc = await generatePDF(ft);
