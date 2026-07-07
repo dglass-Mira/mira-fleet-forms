@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 3.1</title>
+<title>Version 3.15</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -175,11 +175,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="photo-section">
         <div class="photo-count" id="co-photo-count">0 / 8 photos</div>
         <div class="photo-grid" id="co-photo-grid">
-          <div class="photo-add" id="co-photo-add" onclick="document.getElementById('co_photo_input').click()">
-            <span class="ph-icon">📷</span><span>Add Photo</span>
+          <div class="photo-add" id="co-photo-add-cam" onclick="document.getElementById('co_photo_camera').click()">
+            <span class="ph-icon">📷</span><span>Take Photo</span>
+          </div>
+          <div class="photo-add" id="co-photo-add-lib" onclick="document.getElementById('co_photo_library').click()">
+            <span class="ph-icon">🖼</span><span>Choose Existing</span>
           </div>
         </div>
-        <input type="file" accept="image/*" multiple id="co_photo_input" style="display:none" onchange="addPhotos('checkout',this)">
+        <input type="file" accept="image/*" capture="environment" id="co_photo_camera" style="display:none" onchange="addPhotos('checkout',this)">
+        <input type="file" accept="image/*" multiple id="co_photo_library" style="display:none" onchange="addPhotos('checkout',this)">
       </div>
     </div>
     <div class="section">
@@ -258,11 +262,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       <div class="photo-section">
         <div class="photo-count" id="ret-photo-count">0 / 8 photos</div>
         <div class="photo-grid" id="ret-photo-grid">
-          <div class="photo-add" id="ret-photo-add" onclick="document.getElementById('ret_photo_input').click()">
-            <span class="ph-icon">📷</span><span>Add Photo</span>
+          <div class="photo-add" id="ret-photo-add-cam" onclick="document.getElementById('ret_photo_camera').click()">
+            <span class="ph-icon">📷</span><span>Take Photo</span>
+          </div>
+          <div class="photo-add" id="ret-photo-add-lib" onclick="document.getElementById('ret_photo_library').click()">
+            <span class="ph-icon">🖼</span><span>Choose Existing</span>
           </div>
         </div>
-        <input type="file" accept="image/*" multiple id="ret_photo_input" style="display:none" onchange="addPhotos('return',this)">
+        <input type="file" accept="image/*" capture="environment" id="ret_photo_camera" style="display:none" onchange="addPhotos('return',this)">
+        <input type="file" accept="image/*" multiple id="ret_photo_library" style="display:none" onchange="addPhotos('return',this)">
       </div>
     </div>
     <div class="section">
@@ -400,11 +408,16 @@ function renderPhotos(ft) {
     grid.appendChild(d);
   });
   if (arr.length < 8) {
-    var btn = document.createElement('div');
-    btn.className = 'photo-add';
-    btn.innerHTML = '<span class="ph-icon">📷</span><span>Add Photo</span>';
-    btn.onclick = function() { document.getElementById(pfx+'_photo_input').click(); };
-    grid.appendChild(btn);
+    var btnCam = document.createElement('div');
+    btnCam.className = 'photo-add';
+    btnCam.innerHTML = '<span class="ph-icon">📷</span><span>Take Photo</span>';
+    btnCam.onclick = function() { document.getElementById(pfx+'_photo_camera').click(); };
+    grid.appendChild(btnCam);
+    var btnLib = document.createElement('div');
+    btnLib.className = 'photo-add';
+    btnLib.innerHTML = '<span class="ph-icon">🖼</span><span>Choose Existing</span>';
+    btnLib.onclick = function() { document.getElementById(pfx+'_photo_library').click(); };
+    grid.appendChild(btnLib);
   }
   count.textContent = arr.length + ' / 8 photos';
 }
