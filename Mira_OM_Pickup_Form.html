@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OM Vehicle Pickup — Mira Fleet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --navy:#1B3A6B; --navy-mid:#2E5FA3; --navy-light:#E4EAF4;
+  --accent:#F0A500; --gray1:#F7F9FC; --gray2:#EEF1F7;
+  --gray3:#C8D0DC; --gray4:#7A869A; --text:#1A2233; --white:#ffffff;
+  --radius:6px; --shadow:0 2px 12px rgba(27,58,107,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF4;color:var(--text);min-height:100vh}
+
+.app-header{background:var(--navy);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 0;height:66px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.logo{display:flex;align-items:stretch}
+
+.form-card{max-width:860px;margin:24px auto;background:var(--white);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.form-header{background:var(--navy);color:var(--white);padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.form-header h2{font-size:17px;font-weight:700}
+.form-header .badge{font-size:11px;opacity:.7;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:20px}
+
+/* Source type selector */
+.source-toggle{display:flex;gap:0;margin:20px 20px 0;border:2px solid var(--navy);border-radius:var(--radius);overflow:hidden;background:var(--navy-light)}
+.source-btn{flex:1;padding:11px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:none;background:transparent;color:var(--navy);transition:all .15s;letter-spacing:.03em;-webkit-tap-highlight-color:transparent}
+.source-btn.active{background:var(--navy);color:var(--white)}
+
+.section{border-bottom:1px solid var(--gray2)}
+.section-title{background:var(--navy);color:var(--white);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 20px}
+.section-body{padding:18px 20px}
+.field-grid{display:grid;gap:14px}
+.cols2{grid-template-columns:1fr 1fr}
+.cols3{grid-template-columns:1fr 1fr 1fr}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--gray4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;padding:9px 12px;border:1.5px solid var(--gray3);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--text);background:var(--gray1);outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--navy-mid);box-shadow:0 0 0 3px rgba(46,95,163,.15);background:var(--white)}
+.field textarea{min-height:72px;resize:vertical}
+
+/* Conditional field visibility */
+.rental-only,.dealer-only{display:none}
+.source-rental .rental-only{display:block}
+.source-dealer .dealer-only{display:block}
+.source-rental .cols3.rental-only,.source-dealer .cols3.dealer-only{display:grid}
+
+/* Checklist */
+.cl-header{display:grid;grid-template-columns:1fr 60px 60px 60px 150px;gap:4px;padding:6px 12px;background:var(--navy-light);border-bottom:1px solid var(--gray3);font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;text-transform:uppercase}
+.cl-header span:not(:first-child){text-align:center}
+.cl-row{display:grid;grid-template-columns:1fr 60px 60px 60px 150px;gap:4px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--gray2)}
+.cl-row:nth-child(even){background:var(--gray1)}
+.cl-row .item-label{font-size:13px;line-height:1.35}
+.check-group{display:flex;justify-content:center}
+.check-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gray3);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.check-btn.sel-pass{background:#1E7A45;border-color:#1E7A45;color:white}
+.check-btn.sel-fail{background:#C0392B;border-color:#C0392B;color:white}
+.check-btn.sel-na{background:#7A869A;border-color:#7A869A;color:white;font-size:10px;font-weight:700}
+.notes-input{width:100%;padding:5px 8px;border:1.5px solid var(--gray3);border-radius:4px;font-size:12px;font-family:inherit;background:var(--white);outline:none}
+
+/* Photos */
+.photo-section{padding:16px 20px}
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.photo-thumb{position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;border:1.5px solid var(--gray3);background:var(--gray2)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(192,57,43,.88);color:white;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.photo-add{border:2px dashed var(--gray3);border-radius:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--gray4);font-size:12px;font-weight:600;background:var(--gray1);aspect-ratio:4/3;transition:border-color .15s;-webkit-tap-highlight-color:transparent}
+.photo-add:hover{border-color:var(--navy-mid);color:var(--navy-mid)}
+.photo-add .ph-icon{font-size:24px}
+.photo-count{font-size:11px;color:var(--gray4);margin-bottom:2px;font-weight:600}
+
+/* Signature */
+.sig-section{padding:16px 20px}
+.sig-block label{display:block;font-size:11px;font-weight:700;color:var(--gray4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.sig-wrap{position:relative;border:2px solid var(--navy);border-radius:var(--radius);background:#EEF3FA;overflow:hidden;cursor:crosshair;touch-action:none;height:110px}
+.sig-wrap canvas{display:block;width:100%;height:100%;position:absolute;top:0;left:0}
+.sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8AAAD4;font-size:12px;pointer-events:none;text-align:center;white-space:nowrap}
+.sig-clear{margin-top:5px;font-size:11px;color:var(--navy-mid);cursor:pointer;background:none;border:none;padding:2px 0;text-decoration:underline;font-family:inherit}
+.sig-date{margin-top:10px}
+.sig-date label{display:block;font-size:11px;font-weight:700;color:var(--gray4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.sig-date input{padding:8px 12px;border:1.5px solid var(--gray3);border-radius:var(--radius);font-size:14px;font-family:inherit;background:var(--gray1);outline:none;width:60%}
+
+/* Submit bar */
+.submit-bar{background:var(--white);border-top:1px solid var(--gray2);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.submit-bar .status{font-size:12px;color:var(--gray4)}
+.btn{padding:11px 28px;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:var(--navy);color:var(--white)}
+.btn-primary:hover{background:var(--navy-mid)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+/* Validation */
+.field input.invalid,.field select.invalid{border-color:#C0392B;background:#FFF5F5;box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+.field label .req{color:#C0392B;margin-left:2px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 22px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(27,58,107,.55);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:12px;padding:36px 40px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.22);max-width:340px;width:90%;animation:popIn .2s ease}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{font-size:52px;margin-bottom:12px}
+.modal-title{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.modal-msg{font-size:13px;color:var(--gray4);margin-bottom:24px;line-height:1.5}
+.modal-btn{background:var(--navy);color:white;border:none;border-radius:6px;padding:12px 36px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.modal-btn:hover{background:var(--navy-mid)}
+
+@media(max-width:600px){
+  .cols2,.cols3{grid-template-columns:1fr}
+  .cl-header{grid-template-columns:1fr 40px 40px 40px 70px;font-size:9px}
+  .cl-row{grid-template-columns:1fr 40px 40px 40px 70px}
+  .check-btn{width:24px;height:24px;font-size:11px}
+  .form-card{margin:12px 8px}
+  .btn{width:100%}
+  .source-btn{font-size:11px;padding:10px 6px}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">
+    <div style="height:66px;display:flex;align-items:center;padding:0 12px">
+      <svg height="46" viewBox="0 0 314 363" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M98.7467 250.45C112.668 250.45 126.346 245.626 136.624 236.147C137.345 235.483 138.063 234.787 138.778 234.061C148.398 224.273 152.165 209.478 152.165 202.163C152.165 196.802 152.167 53.2393 152.167 48.2426C152.167 40.9281 148.4 26.1314 138.781 16.3448C138.086 15.6379 137.386 14.96 136.686 14.3123C126.439 4.83787 112.795 0.00108125 98.9 0.00108125H31.6821V68.3817C31.6821 82.3831 36.5697 96.1206 46.0988 106.292C46.769 107.007 47.4695 107.719 48.2013 108.428C58.066 117.972 72.9794 121.708 80.3522 121.708C84.6166 121.708 90.5839 121.682 93.6555 121.666C94.761 121.66 95.6573 122.547 95.6573 123.644V126.798C95.6573 127.894 94.7789 128.781 93.6935 128.776C90.6332 128.76 84.6345 128.733 80.3522 128.733C72.9794 128.733 58.066 132.469 48.2013 142.013C47.4684 142.722 46.7679 143.435 46.0988 144.15C36.5697 154.322 31.6821 168.058 31.6821 182.06V250.45H98.7478H98.7467Z" fill="#FFFFFF"/>
+        <path d="M175.031 234.06C175.746 234.787 176.464 235.483 177.185 236.147C187.465 245.626 201.143 250.451 215.064 250.451H282.133V180.263C282.133 173.721 281.071 167.184 278.635 161.122C276.218 155.108 272.213 148.402 265.61 142.014C255.745 132.47 240.833 128.734 233.459 128.734C229.195 128.734 223.227 128.761 220.156 128.777C219.05 128.782 218.154 127.895 218.154 126.799V123.645C218.154 122.548 219.05 121.661 220.156 121.667C223.227 121.683 229.195 121.71 233.459 121.71C240.832 121.71 255.745 117.973 265.61 108.43C272.213 102.041 276.218 95.3365 278.635 89.3218C281.071 83.259 282.133 76.7231 282.133 70.1805V0H214.914C201.018 0 187.376 4.83679 177.129 14.3113C176.427 14.96 175.729 15.6368 175.034 16.3437C165.414 26.1314 161.648 40.927 161.648 48.2415C161.648 53.6018 161.646 197.165 161.646 202.161C161.646 209.475 165.412 224.272 175.032 234.059L175.031 234.06Z" fill="#FFFFFF"/>
+        <path d="M102.204 335.99V328.325C103.398 327.894 106.577 327.658 107.577 327.658C112.021 327.658 115.797 328.546 118.351 330.657C121.462 333.212 122.129 336.989 122.129 340.877V361.982H114.797V358.983C112.686 361.316 109.577 362.649 106.134 362.649C99.5803 362.649 94.5815 357.65 94.5815 351.207C94.5815 344.764 99.6914 339.655 106.355 339.655C109.355 339.655 112.132 340.654 114.242 342.321V341.654C114.242 339.988 113.909 338.211 112.686 337.1C111.243 335.878 109.132 335.545 106.911 335.545C106.134 335.545 103.457 335.682 102.204 335.99ZM107.799 355.539C111.021 355.539 113.575 353.54 113.575 350.874C113.575 348.208 111.021 346.208 107.799 346.208C104.579 346.208 102.134 348.208 102.134 350.874C102.134 353.54 104.579 355.539 107.799 355.539ZM76.7535 361.982V328.213H84.5288V332.212C86.4171 329.435 89.7493 327.658 93.4149 327.658C94.97 327.658 96.0808 327.88 96.8585 327.991V335.878C95.8586 335.767 95.081 335.656 93.8592 335.656C87.5279 335.656 84.8621 341.099 84.8621 348.541V361.982H76.7535ZM65.6459 311.218C68.8671 311.218 71.5329 313.884 71.5329 317.105C71.5329 320.326 68.8671 322.992 65.6459 322.992C62.4247 322.992 59.7589 320.326 59.7589 317.105C59.7589 313.884 62.4247 311.218 65.6459 311.218ZM61.5361 328.213V361.982H69.7557V328.213H61.5361ZM54.094 312.773H45.5411L27.1026 352.318L8.55285 312.773H0V361.982H8.44178V331.435L22.7706 361.982H31.3234L45.6522 331.435V361.982H54.094V312.773Z" fill="#FFFFFF"/>
+        <path d="M143.979 312.723H148.059V335.311H181.272V312.723H185.353V361.982H181.272V339.393H148.059V361.982H143.979V312.723Z" fill="#FFFFFF"/>
+        <path d="M190.478 345.094C190.478 335.101 198.079 327.361 207.859 327.361C217.639 327.361 225.239 335.101 225.239 345.094C225.239 355.087 217.639 362.827 207.859 362.827C198.079 362.827 190.478 355.087 190.478 345.094ZM207.859 358.887C215.529 358.887 221.299 352.976 221.299 345.094C221.299 337.212 215.529 331.301 207.859 331.301C200.188 331.301 194.418 337.212 194.418 345.094C194.418 352.976 200.118 358.887 207.859 358.887Z" fill="#FFFFFF"/>
+        <path d="M230.253 328.205H234.124V332.638C236.165 329.331 239.754 327.361 243.906 327.361C248.41 327.361 252.209 329.823 253.757 333.765C255.939 329.823 259.95 327.361 264.736 327.361C267.902 327.361 270.716 328.557 272.757 330.528C275.36 333.131 275.993 336.368 275.993 339.957V361.984H272.052V340.521C272.052 337.847 271.631 335.524 269.66 333.554C268.183 332.076 266.212 331.302 263.89 331.302C261.708 331.302 259.809 332.005 258.33 333.202C256.36 334.82 255.163 337.283 255.163 341.435V361.983H251.222V340.942C251.222 337.424 250.519 334.749 247.986 332.919C246.648 331.934 244.89 331.301 242.99 331.301C240.808 331.301 238.838 332.004 237.291 333.341C235.391 334.96 234.194 337.423 234.194 341.434V361.982H230.253V328.205Z" fill="#FFFFFF"/>
+        <path d="M281.167 345.204C281.167 335.211 288.345 327.471 297.493 327.471C306.64 327.471 313.818 335.211 313.818 345.204C313.818 345.837 313.818 346.401 313.748 346.964H285.178C285.812 353.931 291.371 358.997 298.549 358.997C303.756 358.997 308.048 356.324 310.16 352.312L313.396 354.212C310.581 359.489 305.023 362.937 298.549 362.937C288.768 362.937 281.169 355.197 281.169 345.204H281.167ZM309.878 343.445C309.455 336.338 304.248 331.13 297.493 331.13C290.737 331.13 285.531 336.338 285.107 343.445H309.878Z" fill="#FFFFFF"/>
+      </svg>
+    </div>
+  </div>
+  <span style="font-size:12px;opacity:.6;letter-spacing:.05em">VEHICLE FORMS</span>
+</header>
+
+<div id="form-root" class="form-card source-rental">
+  <div class="form-header">
+    <h2>OM Vehicle Pickup Form</h2>
+    <span class="badge" id="form-badge"></span>
+  </div>
+
+  <!-- Source type toggle -->
+  <div class="source-toggle">
+    <button class="source-btn active" id="btn-rental" onclick="setSource('rental')">🚗 Enterprise Rental</button>
+    <button class="source-btn" id="btn-dealer" onclick="setSource('dealer')">🏢 Dealership</button>
+  </div>
+
+  <!-- Vehicle Information -->
+  <div class="section" style="margin-top:0">
+    <div class="section-title">Vehicle Information</div>
+    <div class="section-body">
+      <div class="field-grid cols2">
+        <div class="field"><label>Pickup Date<span class="req">*</span></label><input type="date" id="pu_date"></div>
+        <div class="field"><label>Branch / Location<span class="req">*</span></label>
+          <select id="pu_location">
+            <option value="">Select Branch</option>
+            <option>Atlanta North</option><option>Atlanta South</option>
+            <option>Cincinnati</option><option>Cleveland</option><option>Columbus</option>
+            <option>Chicago</option><option>Detroit</option><option>Grand Rapids</option>
+            <option>Indianapolis</option><option>Louisville</option><option>N Indiana</option>
+            <option>Orlando</option><option>Tampa</option><option>Utah</option>
+          </select>
+        </div>
+        <div class="field"><label>OM Name<span class="req">*</span></label><input type="text" id="pu_om_name" placeholder="First Last"></div>
+        <div class="field"><label>Vehicle Make / Model<span class="req">*</span></label><input type="text" id="pu_make_model" placeholder="e.g. Ford Transit 250"></div>
+        <div class="field"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="pu_vin5" maxlength="6" style="text-transform:uppercase" placeholder="XXXXXX"></div>
+        <div class="field"><label>License Plate<span class="req">*</span></label><input type="text" id="pu_plate" style="text-transform:uppercase"></div>
+      </div>
+
+      <!-- Enterprise-only fields -->
+      <div class="field-grid cols2 rental-only" style="margin-top:14px">
+        <div class="field rental-only"><label>Enterprise Reservation #<span class="req">*</span></label><input type="text" id="pu_reservation"></div>
+        <div class="field rental-only"><label>Enterprise Branch / Location<span class="req">*</span></label><input type="text" id="pu_enterprise_loc" placeholder="e.g. Enterprise - Downtown Atlanta"></div>
+      </div>
+
+      <!-- Dealer-only fields -->
+      <div class="field-grid cols2 dealer-only" style="margin-top:14px">
+        <div class="field dealer-only"><label>Dealership Name<span class="req">*</span></label><input type="text" id="pu_dealer_name"></div>
+        <div class="field dealer-only"><label>Dealership Contact Name</label><input type="text" id="pu_dealer_contact"></div>
+        <div class="field dealer-only"><label>Stock / Unit #</label><input type="text" id="pu_stock_num"></div>
+        <div class="field dealer-only"><label>Purchase Price</label><input type="text" id="pu_price" placeholder="$0,000"></div>
+      </div>
+
+      <!-- Temp Tag (shared but labeled contextually) -->
+      <div class="field-grid cols2" style="margin-top:14px">
+        <div class="field"><label>Temp Tag #</label><input type="text" id="pu_temp_tag" placeholder="e.g. TT-123456"></div>
+        <div class="field"><label>Temp Tag Expiration Date</label><input type="date" id="pu_temp_tag_exp"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Condition Checklist -->
+  <div class="section">
+    <div class="section-title">Vehicle Condition Checklist</div>
+    <div class="cl-header"><span>Item</span><span>Pass</span><span>Fail</span><span>N/A</span><span>Notes</span></div>
+    <div id="pu-checklist"></div>
+  </div>
+
+  <!-- Damage Notes -->
+  <div class="section">
+    <div class="section-title">Pre-Existing Damage / Condition Notes</div>
+    <div class="section-body">
+      <div class="field">
+        <textarea id="pu_damage" placeholder="Note any pre-existing damage, odors, mechanical concerns, or anything that should be on record..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photos -->
+  <div class="section">
+    <div class="section-title">Vehicle Photos</div>
+    <div class="photo-section">
+      <div class="photo-count" id="pu-photo-count">0 / 8 photos</div>
+      <div class="photo-grid" id="pu-photo-grid">
+        <div class="photo-add" onclick="document.getElementById('pu_photo_camera').click()">
+          <span class="ph-icon">📷</span><span>Take Photo</span>
+        </div>
+        <div class="photo-add" onclick="document.getElementById('pu_photo_library').click()">
+          <span class="ph-icon">🖼</span><span>Choose Existing</span>
+        </div>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="pu_photo_camera" style="display:none" onchange="addPhotos(this)">
+      <input type="file" accept="image/*" multiple id="pu_photo_library" style="display:none" onchange="addPhotos(this)">
+    </div>
+  </div>
+
+  <!-- Signature -->
+  <div class="section">
+    <div class="section-title">OM Sign-Off</div>
+    <div class="sig-section">
+      <div style="max-width:400px">
+        <div class="sig-block">
+          <label>OM Signature</label>
+          <div class="sig-wrap" id="wrap-pu_sig_om">
+            <canvas id="pu_sig_om"></canvas>
+            <div class="sig-hint" id="hint-pu_sig_om">&#9998; Sign here</div>
+          </div>
+          <button class="sig-clear" onclick="clearSig('pu_sig_om')">Clear</button>
+          <div class="sig-date"><label>Date Signed</label><input type="date" id="pu_sig_date"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-bar">
+    <span class="status" id="pu-status">Complete the form and tap Submit.</span>
+    <button class="btn btn-primary" id="pu-submit" onclick="submitForm()">Submit</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-icon">&#x2705;</div>
+    <div class="modal-title">Form Submitted!</div>
+    <div class="modal-msg" id="modal-msg">Your pickup form has been saved.</div>
+    <button class="modal-btn" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<script>
+// ── SETTINGS ──────────────────────────────────────────────
+var SETTINGS = {
+  email:            'dglass@mirapest.com',
+  emailjs_service:  'service_msb3wfd',
+  emailjs_template: 'template_nhv21fd',
+  emailjs_key:      'KBaa4T5WwOtfhW781',
+  apps_script_url:  'https://script.google.com/macros/s/AKfycbxDWThcCkdBTzw-TUqW1e3pw4A0KfTfBS3c7dIVHro1qTFYffkVjicVefK8ehaemfVa/exec',
+};
+
+// ── CHECKLIST ─────────────────────────────────────────────
+var CHECKLIST = [
+  'Exterior Condition (No Pre-Existing Damage)',
+  'Interior Clean / No Damage',
+  'Keys / Key Fobs Received',
+  'Rental Agreement / Dealer Paperwork Received',
+  'Temp Tag Present & Legible (if applicable)',
+];
+
+var checkState = {};
+var currentSource = 'rental'; // 'rental' | 'dealer'
+
+function setSource(src) {
+  currentSource = src;
+  var root = document.getElementById('form-root');
+  root.classList.toggle('source-rental', src === 'rental');
+  root.classList.toggle('source-dealer', src === 'dealer');
+  document.getElementById('btn-rental').classList.toggle('active', src === 'rental');
+  document.getElementById('btn-dealer').classList.toggle('active', src === 'dealer');
+}
+
+function buildChecklist() {
+  var el = document.getElementById('pu-checklist');
+  el.innerHTML = '';
+  CHECKLIST.forEach(function(label, i) {
+    var id = 'pu_cl_' + i;
+    var row = document.createElement('div');
+    row.className = 'cl-row';
+    row.innerHTML =
+      '<span class="item-label">' + label + '</span>' +
+      '<div class="check-group"><button class="check-btn" data-id="'+id+'" data-val="pass" onclick="tap(this)">&#10003;</button></div>' +
+      '<div class="check-group"><button class="check-btn" data-id="'+id+'" data-val="fail" onclick="tap(this)">&#10007;</button></div>' +
+      '<div class="check-group"><button class="check-btn" data-id="'+id+'" data-val="na" onclick="tap(this)">N/A</button></div>' +
+      '<input class="notes-input" id="'+id+'_notes" type="text" placeholder="Notes...">';
+    el.appendChild(row);
+  });
+}
+
+function tap(btn) {
+  var id = btn.dataset.id, val = btn.dataset.val;
+  var row = btn.closest('.cl-row');
+  row.querySelectorAll('.check-btn').forEach(function(b) {
+    b.classList.remove('sel-pass','sel-fail','sel-na');
+  });
+  if (checkState[id] === val) { checkState[id] = null; return; }
+  checkState[id] = val;
+  btn.classList.add('sel-' + val);
+}
+
+// ── PHOTOS ────────────────────────────────────────────────
+var photoArr = [];
+
+function addPhotos(input) {
+  var remaining = 8 - photoArr.length;
+  Array.from(input.files).slice(0, remaining).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) { photoArr.push(e.target.result); renderPhotos(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removePhoto(idx) { photoArr.splice(idx, 1); renderPhotos(); }
+
+function renderPhotos() {
+  var grid = document.getElementById('pu-photo-grid');
+  var count = document.getElementById('pu-photo-count');
+  grid.innerHTML = '';
+  photoArr.forEach(function(src, i) {
+    var d = document.createElement('div');
+    d.className = 'photo-thumb';
+    var rm = document.createElement('button');
+    rm.className = 'photo-remove';
+    rm.innerHTML = '&#x2715;';
+    (function(n){ rm.onclick = function(){ removePhoto(n); }; })(i);
+    var im = document.createElement('img');
+    im.src = src; im.alt = 'photo '+(i+1);
+    d.appendChild(im); d.appendChild(rm);
+    grid.appendChild(d);
+  });
+  if (photoArr.length < 8) {
+    var btnCam = document.createElement('div');
+    btnCam.className = 'photo-add';
+    btnCam.innerHTML = '<span class="ph-icon">📷</span><span>Take Photo</span>';
+    btnCam.onclick = function() { document.getElementById('pu_photo_camera').click(); };
+    grid.appendChild(btnCam);
+    var btnLib = document.createElement('div');
+    btnLib.className = 'photo-add';
+    btnLib.innerHTML = '<span class="ph-icon">🖼</span><span>Choose Existing</span>';
+    btnLib.onclick = function() { document.getElementById('pu_photo_library').click(); };
+    grid.appendChild(btnLib);
+  }
+  count.textContent = photoArr.length + ' / 8 photos';
+}
+
+function resizeForPDF(dataUrl) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var maxW=400, maxH=300;
+      var scale = Math.min(maxW/img.width, maxH/img.height, 1);
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width*scale); c.height = Math.round(img.height*scale);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      resolve(c.toDataURL('image/jpeg',0.78));
+    };
+    img.onerror = function(){ resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
+
+// ── SIGNATURE ─────────────────────────────────────────────
+var pads = {};
+
+function initPad(id) {
+  var wrap = document.getElementById('wrap-'+id);
+  var canvas = document.getElementById(id);
+  var hint = document.getElementById('hint-'+id);
+  if (!canvas || !wrap) return;
+  var dpr = window.devicePixelRatio || 1;
+  var hasSig = false;
+  function size() {
+    var w = wrap.offsetWidth||400, h = wrap.offsetHeight||110;
+    canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
+    var c = canvas.getContext('2d');
+    c.setTransform(1,0,0,1,0,0); c.scale(dpr,dpr);
+    c.strokeStyle='#1A2233'; c.lineWidth=2; c.lineCap='round'; c.lineJoin='round';
+  }
+  size();
+  var ctx = canvas.getContext('2d');
+  var drawing=false;
+  function pos(e){ var r=canvas.getBoundingClientRect(),src=e.touches?e.touches[0]:e; return{x:src.clientX-r.left,y:src.clientY-r.top}; }
+  function down(e){ e.preventDefault(); drawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); if(!hasSig){hasSig=true;hint.style.display='none';} }
+  function move(e){ if(!drawing)return; e.preventDefault(); var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function up(){ drawing=false; }
+  canvas.addEventListener('mousedown',down,{passive:false});
+  canvas.addEventListener('mousemove',move,{passive:false});
+  canvas.addEventListener('mouseup',up);
+  canvas.addEventListener('mouseleave',up);
+  canvas.addEventListener('touchstart',down,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',up);
+  pads[id]={
+    hasSig:function(){return hasSig;},
+    getDataURL:function(){
+      var tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
+      var tc=tmp.getContext('2d'); tc.fillStyle='#EEF3FA'; tc.fillRect(0,0,tmp.width,tmp.height);
+      tc.drawImage(canvas,0,0); return tmp.toDataURL('image/png');
+    },
+    clear:function(){ hasSig=false; hint.style.display=''; size(); }
+  };
+}
+
+function clearSig(id){ if(pads[id]) pads[id].clear(); }
+
+// ── PDF ───────────────────────────────────────────────────
+async function generatePDF() {
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
+  var PW=215.9, PH=279.4, ML=14, MR=201.9, MW=187.9;
+  var NAVY=[27,58,107], NL=[228,234,244], G1=[247,249,252], G3=[200,208,220], G4=[122,134,154], BLK=[26,34,51];
+  var isRental = currentSource === 'rental';
+  var sourceLabel = isRental ? 'Enterprise Rental Pickup' : 'Dealership Vehicle Pickup';
+  var y = 0;
+
+  // Header
+  doc.setFillColor.apply(doc,NAVY);
+  doc.rect(0,0,PW,18,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('MIRA HOME',ML,11);
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text('FLEET SERVICES',ML,15.5);
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text('OM Vehicle Pickup — '+sourceLabel,MR,11,{align:'right'});
+  y=24;
+
+  function secHdr(label) {
+    doc.setFillColor.apply(doc,NAVY); doc.rect(ML,y,MW,6.5,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text(label.toUpperCase(),ML+3,y+4.5); y+=6.5;
+  }
+  function fld(label,val,x,fy,w) {
+    doc.setFontSize(6.5); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
+    doc.text(label.toUpperCase(),x+1,fy);
+    doc.setFillColor.apply(doc,G1); doc.setDrawColor.apply(doc,G3); doc.setLineWidth(0.3);
+    doc.rect(x,fy+1,w,6,'FD');
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,BLK);
+    doc.text(String(val||''),x+2,fy+5.5);
+  }
+  function v(id){ return (document.getElementById(id)||{}).value||''; }
+
+  var half=MW/2-2;
+
+  // Vehicle Info
+  secHdr('Vehicle Information');
+  y+=2;
+  fld('Pickup Date',v('pu_date'),ML,y,half);
+  fld('Branch / Location',v('pu_location'),ML+half+4,y,half);
+  y+=9; fld('OM Name',v('pu_om_name'),ML,y,half);
+  fld('Source Type', isRental?'Enterprise Rental':'Dealership',ML+half+4,y,half);
+  y+=9; fld('Vehicle Make / Model',v('pu_make_model'),ML,y,half);
+  fld('Last 6 of VIN #',(v('pu_vin5')||'').toUpperCase(),ML+half+4,y,half);
+  y+=9; fld('License Plate',(v('pu_plate')||'').toUpperCase(),ML,y,half);
+  var t2=MW/2-2;
+  fld('Temp Tag #',v('pu_temp_tag'),ML+half+4,y,t2);
+
+  if (v('pu_temp_tag_exp')) {
+    y+=9; fld('Temp Tag Expiration',v('pu_temp_tag_exp'),ML,y,half);
+  }
+
+  if (isRental) {
+    y+=9; fld('Enterprise Reservation #',v('pu_reservation'),ML,y,half);
+    fld('Enterprise Branch',v('pu_enterprise_loc'),ML+half+4,y,half);
+  } else {
+    y+=9; fld('Dealership Name',v('pu_dealer_name'),ML,y,half);
+    fld('Dealership Contact',v('pu_dealer_contact'),ML+half+4,y,half);
+    y+=9; fld('Stock / Unit #',v('pu_stock_num'),ML,y,half);
+    fld('Purchase Price',v('pu_price'),ML+half+4,y,half);
+  }
+  y+=12;
+
+  // Checklist
+  secHdr('Vehicle Condition Checklist');
+  var cPass=MR-43,cFail=MR-31,cNA=MR-19,cNote=MR-13;
+  doc.setFillColor(216,226,240);
+  doc.rect(ML,y,MW,5,'F');
+  doc.setFontSize(6.5); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,NAVY);
+  doc.text('Inspection Item',ML+3,y+3.5);
+  doc.text('Pass',cPass,y+3.5,{align:'center'});
+  doc.text('Fail',cFail,y+3.5,{align:'center'});
+  doc.text('N/A',cNA,y+3.5,{align:'center'});
+  doc.text('Notes',cNote,y+3.5);
+  y+=5;
+
+  CHECKLIST.forEach(function(label,i) {
+    var rh=7;
+    if(i%2===1){doc.setFillColor(244,246,250);doc.rect(ML,y,MW,rh,'F');}
+    doc.setDrawColor(222,228,238); doc.setLineWidth(0.2); doc.line(ML,y+rh,MR,y+rh);
+    var sid='pu_cl_'+i;
+    var state=checkState[sid];
+    var notes=(document.getElementById(sid+'_notes')||{}).value||'';
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,BLK);
+    doc.text(label,ML+3,y+4.8,{maxWidth:cPass-ML-10});
+    [[cPass,[30,122,69],'pass'],[cFail,[192,57,43],'fail'],[cNA,[122,134,154],'na']].forEach(function(ci){
+      var cx=ci[0],col=ci[1],val=ci[2];
+      if(state===val){
+        doc.setFillColor.apply(doc,col); doc.circle(cx,y+rh/2,2,'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(6); doc.setFont('helvetica','bold');
+        doc.text(val==='pass'?'P':val==='fail'?'F':'N',cx,y+rh/2+1.5,{align:'center'});
+      } else {
+        doc.setDrawColor.apply(doc,G3); doc.setLineWidth(0.3); doc.circle(cx,y+rh/2,2,'S');
+      }
+    });
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,G4);
+    if(notes) doc.text(notes,cNote,y+4.8,{maxWidth:MR-cNote-2});
+    y+=rh;
+  });
+  y+=5;
+
+  // Damage notes
+  secHdr('Pre-Existing Damage / Condition Notes');
+  var dmg = v('pu_damage');
+  doc.setFillColor.apply(doc,G1); doc.setDrawColor.apply(doc,G3); doc.setLineWidth(0.3);
+  doc.rect(ML,y,MW,18,'FD');
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,BLK);
+  if(dmg) doc.text(doc.splitTextToSize(dmg,MW-4),ML+2,y+5);
+  y+=22;
+
+  // Photos
+  if(photoArr.length>0){
+    var pCols=4, pW=(MW-(pCols-1)*3)/pCols, pH=pW*0.75;
+    var pRows=Math.ceil(photoArr.length/pCols);
+    var photoBlockH=10+pRows*(pH+3)+4;
+    if(y+photoBlockH>PH-12){
+      doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
+      doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+      doc.text('MIRA HOME, LLC  |  OM Vehicle Pickup Form  |  Retain for branch records',PW/2,PH-4.5,{align:'center'});
+      doc.addPage();
+      doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.text('MIRA HOME',ML,11);
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.text('FLEET SERVICES',ML,15.5);
+      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.text('OM Vehicle Pickup — '+sourceLabel,MR,11,{align:'right'});
+      y=24;
+    }
+    secHdr('Vehicle Photos');
+    y+=3;
+    for(var pi=0;pi<photoArr.length;pi++){
+      var pcol=pi%pCols, prow=Math.floor(pi/pCols);
+      var px=ML+pcol*(pW+3), py=y+prow*(pH+3);
+      var resized=await resizeForPDF(photoArr[pi]);
+      doc.addImage(resized,'JPEG',px,py,pW,pH);
+    }
+    y+=pRows*(pH+3)+4;
+  }
+
+  // Signature
+  var sigNeeded=60;
+  if(y+sigNeeded>PH-12){
+    doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+    doc.text('MIRA HOME, LLC  |  OM Vehicle Pickup Form  |  Retain for branch records',PW/2,PH-4.5,{align:'center'});
+    doc.addPage();
+    doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.text('MIRA HOME',ML,11);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.text('FLEET SERVICES',ML,15.5);
+    doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.text('OM Vehicle Pickup — '+sourceLabel,MR,11,{align:'right'});
+    y=24;
+  }
+  secHdr('OM Sign-Off');
+  y+=3;
+  var sw=MW/2-6, sh=38;
+  var by=y;
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
+  doc.text('OM Signature',ML,by);
+  doc.setFillColor(238,243,250); doc.rect(ML,by+1,sw,sh,'F');
+  doc.setDrawColor.apply(doc,NAVY); doc.setLineWidth(0.5); doc.rect(ML,by+1,sw,sh,'S');
+  var pad=pads['pu_sig_om'];
+  if(pad&&pad.hasSig()){
+    doc.addImage(pad.getDataURL(),'PNG',ML+1,by+2,sw-2,sh-2);
+  } else {
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
+    doc.text('No signature',ML+sw/2,by+sh/2+2,{align:'center'});
+  }
+  var dval=v('pu_sig_date');
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
+  doc.text('Date: '+(dval||'_______________'),ML,by+sh+6);
+
+  // Footer
+  doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+  doc.text('MIRA HOME, LLC  |  OM Vehicle Pickup Form  |  Retain for branch records',PW/2,PH-4.5,{align:'center'});
+
+  return doc;
+}
+
+// ── VALIDATION ────────────────────────────────────────────
+function validateForm() {
+  var coreIds = ['pu_date','pu_location','pu_om_name','pu_make_model','pu_vin5','pu_plate'];
+  var rentalIds = ['pu_reservation','pu_enterprise_loc'];
+  var dealerIds = ['pu_dealer_name'];
+  var ids = coreIds.concat(currentSource==='rental' ? rentalIds : dealerIds);
+  var valid=true, firstBad=null;
+  ids.forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    var empty=!el.value||!el.value.trim();
+    el.classList.toggle('invalid',empty);
+    if(empty&&!firstBad) firstBad=el;
+    if(empty) valid=false;
+  });
+  if(!valid){ showToast('Please fill in all required fields marked with *',true); if(firstBad) firstBad.scrollIntoView({behavior:'smooth',block:'center'}); }
+  return valid;
+}
+
+// ── SUBMIT ────────────────────────────────────────────────
+function v(id){ return (document.getElementById(id)||{}).value||''; }
+
+function buildRow() {
+  var isRental = currentSource==='rental';
+  return [
+    v('pu_date'),
+    v('pu_location'),
+    v('pu_om_name'),
+    isRental ? 'Enterprise Rental' : 'Dealership',
+    v('pu_make_model'),
+    (v('pu_vin5')).toUpperCase(),
+    (v('pu_plate')).toUpperCase(),
+    isRental ? v('pu_reservation') : v('pu_dealer_name'),
+    isRental ? v('pu_enterprise_loc') : v('pu_dealer_contact'),
+    v('pu_temp_tag'),
+    v('pu_temp_tag_exp'),
+    v('pu_damage'),
+    // Drive link appended server-side
+  ];
+}
+
+function blobToBase64(blob){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onloadend=function(){resolve(reader.result.split(',')[1]);};
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function submitToAppsScript(blob, fname) {
+  if(!SETTINGS.apps_script_url||SETTINGS.apps_script_url.startsWith('PASTE'))
+    throw new Error('Apps Script URL not configured');
+  var b64=await blobToBase64(blob);
+  var res=await fetch(SETTINGS.apps_script_url,{
+    method:'POST', redirect:'follow',
+    body:JSON.stringify({pdf:b64, filename:fname, row:buildRow(), sheet:'Fleet Pickups'})
+  });
+  if(!res.ok) throw new Error('Server error: '+res.status);
+  var result=await res.json();
+  if(!result.ok) throw new Error(result.error||'Apps Script error');
+  return result.link;
+}
+
+async function sendEmail(fname, link) {
+  emailjs.init({publicKey:SETTINGS.emailjs_key});
+  var isRental=currentSource==='rental';
+  var om=v('pu_om_name'), loc=v('pu_location'), vin=v('pu_vin5'), model=v('pu_make_model');
+  var dmg=v('pu_damage')||'None';
+  var src=isRental?('Enterprise Rental — Reservation #'+v('pu_reservation')):('Dealership: '+v('pu_dealer_name'));
+  var msg='OM Vehicle Pickup form submitted.\n\n'+
+    'OM Name: '+om+'\nBranch: '+loc+'\nSource: '+src+
+    '\nVehicle: '+model+'\nVIN (last 6): '+vin+
+    '\nTemp Tag: '+(v('pu_temp_tag')||'N/A')+
+    '\nDamage Notes: '+dmg+
+    '\nSubmitted: '+new Date().toLocaleString()+
+    '\n\nView PDF: '+(link||'Not uploaded');
+  await emailjs.send(SETTINGS.emailjs_service, SETTINGS.emailjs_template,{
+    to_email: SETTINGS.email,
+    subject: 'Mira Fleet — OM Pickup | '+fname,
+    message: msg,
+    drive_link: link||'Not uploaded',
+  });
+}
+
+async function submitForm() {
+  var btn=document.getElementById('pu-submit');
+  btn.disabled=true;
+  if(!validateForm()){btn.disabled=false;return;}
+  setStatus('Generating PDF...');
+  try {
+    var doc=await generatePDF();
+    var om=(v('pu_om_name')||'Unknown').trim().replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+    var loc=(v('pu_location')||'').trim().replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+    var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var dateObj=new Date((v('pu_date')||new Date().toISOString().slice(0,10))+'T00:00:00');
+    var friendlyDate=dateObj.getFullYear()+'_'+MONTHS[dateObj.getMonth()]+'_'+(dateObj.getDate()<10?'0':'')+dateObj.getDate();
+    var fname=om+(loc?'_'+loc:'')+'_'+friendlyDate+'.pdf';
+    var blob=doc.output('blob');
+
+    setStatus('Saving to Drive & Sheets...');
+    var link=await submitToAppsScript(blob,fname);
+    showToast('Saved to Drive & logged to Sheets');
+
+    setStatus('Sending email...');
+    await sendEmail(fname,link);
+
+    document.getElementById('modal-msg').textContent=
+      'PDF saved to Google Drive, row logged to the Fleet Pickups sheet, and confirmation email sent to '+SETTINGS.email+'.';
+    document.getElementById('modal').classList.add('show');
+  } catch(e) {
+    console.error(e);
+    setStatus('Error: '+e.message);
+    showToast('Error: '+e.message,true);
+    btn.disabled=false;
+  }
+}
+
+function setStatus(msg){ document.getElementById('pu-status').textContent=msg; }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); window.location.reload(); }
+function showToast(msg,err){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=err?'#C0392B':'#1B3A6B';
+  t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},3500);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+function init(){
+  buildChecklist();
+  initPad('pu_sig_om');
+  var today=new Date().toISOString().slice(0,10);
+  ['pu_date','pu_sig_date'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&!el.value) el.value=today;
+  });
+  var fmt=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('form-badge').textContent=fmt;
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
