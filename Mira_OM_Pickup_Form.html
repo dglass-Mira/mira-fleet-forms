@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>OM Vehicle Pickup — Mira Fleet</title>
+<title>Version 1 — Mira Fleet</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -45,6 +45,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 .source-rental .rental-only{display:block}
 .source-dealer .dealer-only{display:block}
 .source-rental .cols3.rental-only,.source-dealer .cols3.dealer-only{display:grid}
+.source-rental .cols2.rental-only,.source-dealer .cols2.dealer-only{display:grid}
 
 /* Checklist */
 .cl-header{display:grid;grid-template-columns:1fr 60px 60px 60px 150px;gap:4px;padding:6px 12px;background:var(--navy-light);border-bottom:1px solid var(--gray3);font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;text-transform:uppercase}
@@ -138,7 +139,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
   <span style="font-size:12px;opacity:.6;letter-spacing:.05em">VEHICLE FORMS</span>
 </header>
 
-<div id="form-root" class="form-card source-rental">
+<div id="form-root" class="form-card source-dealer">
   <div class="form-header">
     <h2>OM Vehicle Pickup Form</h2>
     <span class="badge" id="form-badge"></span>
@@ -146,8 +147,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
 
   <!-- Source type toggle -->
   <div class="source-toggle">
-    <button class="source-btn active" id="btn-rental" onclick="setSource('rental')">🚗 Enterprise Rental</button>
-    <button class="source-btn" id="btn-dealer" onclick="setSource('dealer')">🏢 Dealership</button>
+    <button class="source-btn active" id="btn-dealer" onclick="setSource('dealer')">🏢 Dealership</button>
+    <button class="source-btn" id="btn-rental" onclick="setSource('rental')">🚗 Enterprise Rental</button>
   </div>
 
   <!-- Vehicle Information -->
@@ -186,8 +187,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
         <div class="field dealer-only"><label>Purchase Price</label><input type="text" id="pu_price" placeholder="$0,000"></div>
       </div>
 
-      <!-- Temp Tag (shared but labeled contextually) -->
-      <div class="field-grid cols2" style="margin-top:14px">
+      <!-- Temp Tag (dealership only) -->
+      <div class="field-grid cols2 dealer-only" style="margin-top:14px">
         <div class="field"><label>Temp Tag #</label><input type="text" id="pu_temp_tag" placeholder="e.g. TT-123456"></div>
         <div class="field"><label>Temp Tag Expiration Date</label><input type="date" id="pu_temp_tag_exp"></div>
       </div>
@@ -283,7 +284,7 @@ var CHECKLIST = [
 ];
 
 var checkState = {};
-var currentSource = 'rental'; // 'rental' | 'dealer'
+var currentSource = 'dealer'; // 'rental' | 'dealer'
 
 function setSource(src) {
   currentSource = src;
