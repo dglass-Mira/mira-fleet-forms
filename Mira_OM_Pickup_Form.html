@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 1 — Mira Fleet</title>
+<title>Version 1.1 — Mira Fleet</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -169,8 +169,11 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
         </div>
         <div class="field"><label>OM Name<span class="req">*</span></label><input type="text" id="pu_om_name" placeholder="First Last"></div>
         <div class="field"><label>Vehicle Make / Model<span class="req">*</span></label><input type="text" id="pu_make_model" placeholder="e.g. Ford Transit 250"></div>
-        <div class="field"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="pu_vin5" maxlength="6" style="text-transform:uppercase" placeholder="XXXXXX"></div>
-        <div class="field"><label>License Plate<span class="req">*</span></label><input type="text" id="pu_plate" style="text-transform:uppercase"></div>
+        <!-- Dealer: full VIN, no plate -->
+        <div class="field dealer-only"><label>Full VIN #<span class="req">*</span></label><input type="text" id="pu_vin_full" maxlength="17" style="text-transform:uppercase" placeholder="17-character VIN"></div>
+        <!-- Enterprise: last 6 of VIN + plate -->
+        <div class="field rental-only"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="pu_vin5" maxlength="6" style="text-transform:uppercase" placeholder="XXXXXX"></div>
+        <div class="field rental-only"><label>License Plate<span class="req">*</span></label><input type="text" id="pu_plate" style="text-transform:uppercase"></div>
       </div>
 
       <!-- Enterprise-only fields -->
@@ -184,7 +187,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
         <div class="field dealer-only"><label>Dealership Name<span class="req">*</span></label><input type="text" id="pu_dealer_name"></div>
         <div class="field dealer-only"><label>Dealership Contact Name</label><input type="text" id="pu_dealer_contact"></div>
         <div class="field dealer-only"><label>Stock / Unit #</label><input type="text" id="pu_stock_num"></div>
-        <div class="field dealer-only"><label>Purchase Price</label><input type="text" id="pu_price" placeholder="$0,000"></div>
       </div>
 
       <!-- Temp Tag (dealership only) -->
@@ -476,13 +478,11 @@ async function generatePDF() {
   y+=9; fld('OM Name',v('pu_om_name'),ML,y,half);
   fld('Source Type', isRental?'Enterprise Rental':'Dealership',ML+half+4,y,half);
   y+=9; fld('Vehicle Make / Model',v('pu_make_model'),ML,y,half);
-  fld('Last 6 of VIN #',(v('pu_vin5')||'').toUpperCase(),ML+half+4,y,half);
-  y+=9; fld('License Plate',(v('pu_plate')||'').toUpperCase(),ML,y,half);
-  var t2=MW/2-2;
-  fld('Temp Tag #',v('pu_temp_tag'),ML+half+4,y,t2);
-
-  if (v('pu_temp_tag_exp')) {
-    y+=9; fld('Temp Tag Expiration',v('pu_temp_tag_exp'),ML,y,half);
+  if (isRental) {
+    fld('Last 6 of VIN #',(v('pu_vin5')||'').toUpperCase(),ML+half+4,y,half);
+    y+=9; fld('License Plate',(v('pu_plate')||'').toUpperCase(),ML,y,half);
+  } else {
+    fld('Full VIN #',(v('pu_vin_full')||'').toUpperCase(),ML+half+4,y,half);
   }
 
   if (isRental) {
@@ -492,7 +492,10 @@ async function generatePDF() {
     y+=9; fld('Dealership Name',v('pu_dealer_name'),ML,y,half);
     fld('Dealership Contact',v('pu_dealer_contact'),ML+half+4,y,half);
     y+=9; fld('Stock / Unit #',v('pu_stock_num'),ML,y,half);
-    fld('Purchase Price',v('pu_price'),ML+half+4,y,half);
+    fld('Temp Tag #',v('pu_temp_tag'),ML+half+4,y,half);
+    if (v('pu_temp_tag_exp')) {
+      y+=9; fld('Temp Tag Expiration',v('pu_temp_tag_exp'),ML,y,half);
+    }
   }
   y+=12;
 
@@ -614,9 +617,9 @@ async function generatePDF() {
 
 // ── VALIDATION ────────────────────────────────────────────
 function validateForm() {
-  var coreIds = ['pu_date','pu_location','pu_om_name','pu_make_model','pu_vin5','pu_plate'];
-  var rentalIds = ['pu_reservation','pu_enterprise_loc'];
-  var dealerIds = ['pu_dealer_name'];
+  var coreIds = ['pu_date','pu_location','pu_om_name','pu_make_model'];
+  var rentalIds = ['pu_vin5','pu_plate','pu_reservation','pu_enterprise_loc'];
+  var dealerIds = ['pu_vin_full','pu_dealer_name'];
   var ids = coreIds.concat(currentSource==='rental' ? rentalIds : dealerIds);
   var valid=true, firstBad=null;
   ids.forEach(function(id){
@@ -641,8 +644,8 @@ function buildRow() {
     v('pu_om_name'),
     isRental ? 'Enterprise Rental' : 'Dealership',
     v('pu_make_model'),
-    (v('pu_vin5')).toUpperCase(),
-    (v('pu_plate')).toUpperCase(),
+    isRental ? (v('pu_vin5')).toUpperCase() : (v('pu_vin_full')).toUpperCase(),
+    isRental ? (v('pu_plate')).toUpperCase() : '',
     isRental ? v('pu_reservation') : v('pu_dealer_name'),
     isRental ? v('pu_enterprise_loc') : v('pu_dealer_contact'),
     v('pu_temp_tag'),
