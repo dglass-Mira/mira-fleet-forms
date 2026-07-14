@@ -112,7 +112,10 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       </svg>
     </div>
   </div>
-  <span style="font-size:12px;opacity:.6;letter-spacing:.05em">VEHICLE FORMS</span>
+  <div style="text-align:right">
+    <div style="font-size:12px;opacity:.6;letter-spacing:.05em">VEHICLE FORMS</div>
+    <div style="font-size:10px;opacity:.4;letter-spacing:.04em;margin-top:2px">v3.24</div>
+  </div>
 </header>
 
 <nav class="tabs">
@@ -557,6 +560,9 @@ async function generatePDF(ft) {
   doc.text('FLEET SERVICES', ML, 15.5);
   doc.setFontSize(12); doc.setFont('helvetica','bold');
   doc.text(title, MR, 11, {align:'right'});
+  doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.setTextColor(255,255,255);
+  doc.text('v' + APP_VERSION, MR, 16, {align:'right'});
   y = 24;
 
   function secHdr(label) {
@@ -603,7 +609,7 @@ async function generatePDF(ft) {
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
     y+=9; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, half);
-    var rentalVal = document.getElementById('co_rental_yes') && document.getElementById('co_rental_yes').checked ? 'Yes' : (document.getElementById('co_rental_no') && document.getElementById('co_rental_no').checked ? 'No' : '—');
+    var rentalVal = document.getElementById('co_rental_yes') && document.getElementById('co_rental_yes').checked ? 'Yes' : (document.getElementById('co_rental_no') && document.getElementById('co_rental_no').checked ? 'No' : 'N/A');
     fld('Rental Vehicle?', rentalVal, ML+half+4, y, half);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
@@ -924,6 +930,8 @@ function showToast(msg, err) {
 }
 
 // ── INIT ─────────────────────────────────────────────────
+var APP_VERSION = '3.24';
+
 function init() {
   buildChecklists();
   ['co_sig_driver','co_sig_manager','ret_sig_driver','ret_sig_manager'].forEach(initPad);
@@ -933,8 +941,8 @@ function init() {
     if (el && !el.value) el.value = today;
   });
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-  document.getElementById('co-badge').textContent = fmt;
-  document.getElementById('ret-badge').textContent = fmt;
+  document.getElementById('co-badge').innerHTML = fmt + '<br><span style="opacity:.7;font-size:10px">v' + APP_VERSION + '</span>';
+  document.getElementById('ret-badge').innerHTML = fmt + '<br><span style="opacity:.7;font-size:10px">v' + APP_VERSION + '</span>';
 }
 
 document.addEventListener('DOMContentLoaded', init);
