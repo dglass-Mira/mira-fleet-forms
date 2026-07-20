@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 3.27</title>
+<title>Version 3.28</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -139,7 +139,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
           <div class="field"><label>Last 6 of VIN #<span class="req">*</span></label><input type="text" id="co_vin5" maxlength="6" style="text-transform:uppercase"></div>
         </div>
         <div class="field-grid cols3" style="margin-top:14px">
-          <div class="field"><label>SNX Fuel Card #<span class="req">*</span></label><input type="text" id="co_fuel_card"></div>
+          <div class="field"><label>SNX Number on Fuel Card<span class="req">*</span></label><input type="text" id="co_fuel_card"></div>
           <div class="field"><label>License Plate<span class="req">*</span></label><input type="text" id="co_plate"></div>
           <div class="field"><label>Driver Phone #<span class="req">*</span></label><input type="tel" id="co_phone"></div>
         </div>
@@ -557,9 +557,6 @@ async function generatePDF(ft) {
   doc.text('FLEET SERVICES', ML, 15.5);
   doc.setFontSize(12); doc.setFont('helvetica','bold');
   doc.text(title, MR, 11, {align:'right'});
-  doc.setFontSize(7); doc.setFont('helvetica','normal');
-  doc.setTextColor(255,255,255);
-  doc.text('v' + APP_VERSION, MR, 16, {align:'right'});
   y = 24;
 
   function secHdr(label) {
@@ -602,12 +599,10 @@ async function generatePDF(ft) {
     y+=9; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
     fld('Last 6 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
     y+=9; var t3=MW/3-2;
-    fld('Fuel Card #', document.getElementById('co_fuel_card').value, ML, y, t3);
+    fld('SNX Number on Fuel Card', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
-    y+=9; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, half);
-    var rentalVal = document.getElementById('co_rental_yes') && document.getElementById('co_rental_yes').checked ? 'Yes' : (document.getElementById('co_rental_no') && document.getElementById('co_rental_no').checked ? 'No' : 'N/A');
-    fld('Rental Vehicle?', rentalVal, ML+half+4, y, half);
+    y+=9; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, MW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
@@ -927,8 +922,6 @@ function showToast(msg, err) {
 }
 
 // ── INIT ─────────────────────────────────────────────────
-var APP_VERSION = '3.27';
-
 function init() {
   buildChecklists();
   ['co_sig_driver','co_sig_manager','ret_sig_driver','ret_sig_manager'].forEach(initPad);
@@ -938,8 +931,8 @@ function init() {
     if (el && !el.value) el.value = today;
   });
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-  document.getElementById('co-badge').innerHTML = fmt + '<br><span style="opacity:.7;font-size:10px">v' + APP_VERSION + '</span>';
-  document.getElementById('ret-badge').innerHTML = fmt + '<br><span style="opacity:.7;font-size:10px">v' + APP_VERSION + '</span>';
+  document.getElementById('co-badge').textContent = fmt;
+  document.getElementById('ret-badge').textContent = fmt;
 }
 
 document.addEventListener('DOMContentLoaded', init);
