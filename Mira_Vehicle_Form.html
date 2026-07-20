@@ -930,9 +930,12 @@ function init() {
     var el = document.getElementById(id);
     if (el && !el.value) el.value = today;
   });
+  var APP_VERSION = 'v3.28';
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-  document.getElementById('co-badge').textContent = fmt;
-  document.getElementById('ret-badge').textContent = fmt;
+  ['co-badge','ret-badge'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.innerHTML = fmt + '<br><span style="opacity:.75;font-size:10px;letter-spacing:.04em">' + APP_VERSION + '</span>';
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
