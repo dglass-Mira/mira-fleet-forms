@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Version 3.31</title>
+<title>Version 3.3.32</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -584,10 +584,10 @@ async function generatePDF(ft) {
     doc.text(label.toUpperCase(), x+1, fy);
     doc.setFillColor.apply(doc, G1);
     doc.setDrawColor.apply(doc, G3); doc.setLineWidth(0.3);
-    doc.rect(x, fy+1, w, 6, 'FD');
+    doc.rect(x, fy+1.5, w, 8, 'FD');
     doc.setFontSize(9); doc.setFont('helvetica','normal');
     doc.setTextColor.apply(doc, BLK);
-    doc.text(String(val||''), x+2, fy+5.5);
+    doc.text(String(val||''), x+2, fy+7);
   }
 
   // Vehicle Info
@@ -597,26 +597,26 @@ async function generatePDF(ft) {
   if (isco) {
     fld('Date', document.getElementById('co_date').value, ML, y, half);
     fld('Location / Branch', document.getElementById('co_location').value, ML+half+4, y, half);
-    y+=9; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
+    y+=11; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
     fld('Odometer (Initial)', document.getElementById('co_odometer').value, ML+half+4, y, half);
-    y+=9; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
+    y+=11; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
     fld('Last 6 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
-    y+=9; var t3=MW/3-2;
+    y+=11; var t3=MW/3-2;
     fld('SNX Number on Fuel Card', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
-    y+=9; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, MW);
+    y+=11; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, MW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
-    y+=9; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
+    y+=11; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
     fld('Odometer (Return)', document.getElementById('ret_odometer').value, ML+half+4, y, half);
-    y+=9; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
+    y+=11; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
     fld('Last 6 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
-    y+=9; fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML, y, half);
-    y+=9; fld('Driver Email', document.getElementById('ret_driver_email').value, ML, y, MW);
+    y+=11; fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML, y, half);
+    y+=11; fld('Driver Email', document.getElementById('ret_driver_email').value, ML, y, MW);
   }
-  y += 10;
+  y += 12;
 
   // Checklist
   secHdr(isco ? 'Initial Vehicle Inspection Checklist' : 'Return Vehicle Inspection Checklist');
@@ -639,15 +639,43 @@ async function generatePDF(ft) {
     subHdr(g[0]);
     var items = LISTS[g[1]] || [];
     items.forEach(function(label, idx) {
-      var rh = 6.5;
-      if (idx%2===1) { doc.setFillColor(244,246,250); doc.rect(ML,y,MW,rh,'F'); }
-      doc.setDrawColor(222,228,238); doc.setLineWidth(0.2);
-      doc.line(ML, y+rh, MR, y+rh);
       var sid = g[1].replace(/-/g,'_')+'_'+idx;
       var state = checkState[sid];
       var notes = (document.getElementById(sid+'_notes')||{}).value||'';
+      var noteMaxW = MR - cNote - 2;
+
+      // Calculate wrapped note lines to determine row height
+      doc.setFontSize(7); doc.setFont('helvetica','normal');
+      var noteLines = notes ? doc.splitTextToSize(notes, noteMaxW) : [];
+      var minRH = 6.5;
+      var rh = noteLines.length > 1 ? Math.max(minRH, noteLines.length * 4 + 2) : minRH;
+
+      // Page break check
+      if (y + rh > PH - 20) {
+        doc.setFillColor.apply(doc, NAVY);
+        doc.rect(0, PH-10, PW, 10, 'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records', PW/2, PH-4.5, {align:'center'});
+        doc.addPage();
+        doc.setFillColor.apply(doc, NAVY);
+        doc.rect(0, 0, PW, 18, 'F');
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(14); doc.setFont('helvetica','bold');
+        doc.text('MIRA HOME', ML, 11);
+        doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+        doc.text('FLEET SERVICES', ML, 15.5);
+        doc.setFontSize(12); doc.setFont('helvetica','bold');
+        doc.text(title, MR, 11, {align:'right'});
+        y = 24;
+      }
+
+      if (idx%2===1) { doc.setFillColor(244,246,250); doc.rect(ML,y,MW,rh,'F'); }
+      doc.setDrawColor(222,228,238); doc.setLineWidth(0.2);
+      doc.line(ML, y+rh, MR, y+rh);
+
       doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,BLK);
       doc.text(label, ML+3, y+4.5, {maxWidth: cPass-ML-10});
+
       [[cPass,[30,122,69],'pass'],[cFail,[192,57,43],'fail'],[cNA,[122,134,154],'na']].forEach(function(ci) {
         var cx=ci[0], col=ci[1], val=ci[2];
         if (state===val) {
@@ -658,8 +686,13 @@ async function generatePDF(ft) {
           doc.setDrawColor.apply(doc,G3); doc.setLineWidth(0.3); doc.circle(cx,y+rh/2,1.9,'S');
         }
       });
-      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,G4);
-      if (notes) doc.text(notes, cNote, y+4.5, {maxWidth:MR-cNote-2});
+
+      // Render wrapped note lines
+      if (noteLines.length > 0) {
+        doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,G4);
+        doc.text(noteLines, cNote, y+4.5);
+      }
+
       y += rh;
     });
   });
