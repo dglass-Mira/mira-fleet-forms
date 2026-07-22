@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 1.11</title>
+<title>Version 1.12</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -190,22 +190,22 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#E8ECF
       </div>
 
       <!-- Tag (dealership only) -->
+      <div class="field-grid cols2 dealer-only" style="margin-top:14px">
+        <div class="field"><label>Tag #</label><input type="text" id="pu_temp_tag" placeholder="e.g. TT-123456"></div>
+        <div class="field"><label>Tag Expiration Date</label><input type="date" id="pu_temp_tag_exp"></div>
+      </div>
       <div class="field-grid dealer-only" style="margin-top:14px">
         <div class="field">
-          <label>Does the vehicle have a Tag?</label>
+          <label>Is this a Temp Tag?</label>
           <div style="display:flex;gap:20px;margin-top:6px">
             <label style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer">
-              <input type="radio" name="pu_has_tag" id="pu_has_tag_yes" value="Yes" style="width:18px;height:18px;accent-color:var(--navy)" onchange="toggleTagFields()"> Yes
+              <input type="radio" name="pu_has_tag" id="pu_has_tag_yes" value="Yes" style="width:18px;height:18px;accent-color:var(--navy)"> Yes
             </label>
             <label style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer">
-              <input type="radio" name="pu_has_tag" id="pu_has_tag_no" value="No" style="width:18px;height:18px;accent-color:var(--navy)" onchange="toggleTagFields()"> No
+              <input type="radio" name="pu_has_tag" id="pu_has_tag_no" value="No" style="width:18px;height:18px;accent-color:var(--navy)"> No
             </label>
           </div>
         </div>
-      </div>
-      <div class="field-grid cols2 dealer-only" id="tag-fields" style="margin-top:14px;display:none">
-        <div class="field"><label>Tag #</label><input type="text" id="pu_temp_tag" placeholder="e.g. TT-123456"></div>
-        <div class="field"><label>Tag Expiration Date</label><input type="date" id="pu_temp_tag_exp"></div>
       </div>
     </div>
   </div>
@@ -301,12 +301,6 @@ var CHECKLIST = [
 var checkState = {};
 var currentSource = 'dealer'; // 'rental' | 'dealer'
 
-function toggleTagFields() {
-  var yes = document.getElementById('pu_has_tag_yes');
-  var fields = document.getElementById('tag-fields');
-  fields.style.display = (yes && yes.checked) ? 'grid' : 'none';
-}
-
 function setSource(src) {
   currentSource = src;
   var root = document.getElementById('form-root');
@@ -314,9 +308,8 @@ function setSource(src) {
   root.classList.toggle('source-dealer', src === 'dealer');
   document.getElementById('btn-rental').classList.toggle('active', src === 'rental');
   document.getElementById('btn-dealer').classList.toggle('active', src === 'dealer');
-  // Reset tag radio + fields when switching tabs
+  // Reset tag radio when switching tabs
   document.querySelectorAll('input[name="pu_has_tag"]').forEach(function(r){ r.checked = false; });
-  document.getElementById('tag-fields').style.display = 'none';
 }
 
 function buildChecklist() {
@@ -514,13 +507,12 @@ async function generatePDF() {
     y+=9; fld('Dealership Name',v('pu_dealer_name'),ML,y,half);
     fld('Dealership Contact',v('pu_dealer_contact'),ML+half+4,y,half);
     y+=9; fld('Stock / Unit #',v('pu_stock_num'),ML,y,half);
-    var hasTag = document.getElementById('pu_has_tag_yes');
-    var hasTagVal = hasTag && hasTag.checked ? 'Yes' : (document.getElementById('pu_has_tag_no') && document.getElementById('pu_has_tag_no').checked ? 'No' : '');
-    fld('Vehicle Has Tag?', hasTagVal, ML+half+4, y, half);
-    if (hasTag && hasTag.checked) {
-      y+=9; fld('Tag #',v('pu_temp_tag'),ML,y,half);
-      fld('Tag Expiration',v('pu_temp_tag_exp'),ML+half+4,y,half);
-    }
+    var hasTagYes = document.getElementById('pu_has_tag_yes');
+    var hasTagNo = document.getElementById('pu_has_tag_no');
+    var isTempTag = hasTagYes && hasTagYes.checked ? 'Yes' : (hasTagNo && hasTagNo.checked ? 'No' : '');
+    fld('Is this a Temp Tag?', isTempTag, ML+half+4, y, half);
+    y+=9; fld('Tag #', v('pu_temp_tag'), ML, y, half);
+    fld('Tag Expiration', v('pu_temp_tag_exp'), ML+half+4, y, half);
   }
   y+=12;
 
