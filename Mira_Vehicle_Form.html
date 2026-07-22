@@ -655,7 +655,7 @@ async function generatePDF(ft) {
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, PH-10, PW, 10, 'F');
         doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records', PW/2, PH-4.5, {align:'center'});
+        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
         doc.addPage();
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, 0, PW, 18, 'F');
@@ -716,7 +716,7 @@ async function generatePDF(ft) {
     if (y + photoBlockH > PH - 12) {
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
       doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records',PW/2,PH-4.5,{align:'center'});
+      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37',PW/2,PH-4.5,{align:'center'});
       doc.addPage();
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
       doc.setTextColor(255,255,255);
@@ -743,7 +743,7 @@ async function generatePDF(ft) {
     doc.setFillColor.apply(doc, NAVY);
     doc.rect(0, PH-10, PW, 10, 'F');
     doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records', PW/2, PH-4.5, {align:'center'});
+    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
     // New page with repeated header
     doc.addPage();
     doc.setFillColor.apply(doc, NAVY);
@@ -792,7 +792,7 @@ async function generatePDF(ft) {
   doc.setFillColor.apply(doc,NAVY);
   doc.rect(0, PH-10, PW, 10, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records', PW/2, PH-4.5, {align:'center'});
+  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
 
   return doc;
 }
@@ -974,7 +974,7 @@ function init() {
     var el = document.getElementById(id);
     if (el && !el.value) el.value = today;
   });
-  var APP_VERSION = 'v3.32';
+  var APP_VERSION = 'v3.37';
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   ['co-badge','ret-badge'].forEach(function(id) {
     var el = document.getElementById(id);
