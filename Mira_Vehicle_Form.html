@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Version 3.28</title>
+<title>Version 3.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -876,16 +876,24 @@ async function submitToAppsScript(blob, fname, ft) {
     throw new Error('Apps Script URL not configured in SETTINGS');
   }
   var b64 = await blobToBase64(blob);
+
+  // Strip the data URL prefix (e.g. "data:image/jpeg;base64,") from each photo
+  var photoData = (photos[ft] || []).map(function(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = (parts[0].match(/:(.*?);/) || ['','image/jpeg'])[1];
+    return { data: parts[1], mime: mime };
+  });
+
   // No Content-Type header → "simple" CORS request, no preflight needed
   var res = await fetch(SETTINGS.apps_script_url, {
     method: 'POST',
     redirect: 'follow',
-    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft) })
+    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft), photos: photoData })
   });
   if (!res.ok) throw new Error('Server error: ' + res.status);
   var result = await res.json();
   if (!result.ok) throw new Error(result.error || 'Apps Script error');
-  return result.link; // Drive share link
+  return result.link; // Drive share link (PDF)
 }
 
 // ── EMAILJS ──────────────────────────────────────────────
