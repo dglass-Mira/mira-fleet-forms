@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Version 3.36</title>
+<title>Version 3.37</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -597,24 +597,24 @@ async function generatePDF(ft) {
   if (isco) {
     fld('Date', document.getElementById('co_date').value, ML, y, half);
     fld('Location / Branch', document.getElementById('co_location').value, ML+half+4, y, half);
-    y+=15; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
+    y+=13; fld("HCS's Name", document.getElementById('co_hcs_name').value, ML, y, half);
     fld('Odometer (Initial)', document.getElementById('co_odometer').value, ML+half+4, y, half);
-    y+=15; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
+    y+=13; fld('Vehicle Make / Model', document.getElementById('co_make_model').value, ML, y, half);
     fld('Last 6 of VIN #', (document.getElementById('co_vin5').value||'').toUpperCase(), ML+half+4, y, half);
-    y+=15; var t3=MW/3-2;
+    y+=13; var t3=MW/3-2;
     fld('SNX Number on Fuel Card', document.getElementById('co_fuel_card').value, ML, y, t3);
     fld('License Plate', document.getElementById('co_plate').value, ML+t3+3, y, t3);
     fld('Driver Phone #', document.getElementById('co_phone').value, ML+2*t3+6, y, t3);
-    y+=15; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, MW);
+    y+=13; fld('Driver Email', document.getElementById('co_driver_email').value, ML, y, MW);
   } else {
     fld('Return Date', document.getElementById('ret_date').value, ML, y, half);
     fld('Return Location', document.getElementById('ret_location').value, ML+half+4, y, half);
-    y+=15; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
+    y+=13; fld("HCS's Name", document.getElementById('ret_hcs_name').value, ML, y, half);
     fld('Odometer (Return)', document.getElementById('ret_odometer').value, ML+half+4, y, half);
-    y+=15; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
+    y+=13; fld('Vehicle Make / Model', document.getElementById('ret_make_model').value, ML, y, half);
     fld('Last 6 of VIN #', (document.getElementById('ret_vin5').value||'').toUpperCase(), ML+half+4, y, half);
-    y+=15; fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML, y, half);
-    y+=15; fld('Driver Email', document.getElementById('ret_driver_email').value, ML, y, MW);
+    y+=13; fld('Fuel Card Returned', document.getElementById('ret_fuel_card').value, ML, y, half);
+    y+=13; fld('Driver Email', document.getElementById('ret_driver_email').value, ML, y, MW);
   }
   y += 14;
 
