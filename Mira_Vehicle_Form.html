@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Version 3.38</title>
+<title>Version 3.39</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -327,7 +327,6 @@ var SETTINGS = {
   emailjs_service: 'service_msb3wfd',
   emailjs_template:'template_nhv21fd',
   emailjs_key:     'KBaa4T5WwOtfhW781',
-  // Paste your deployed Apps Script URL here after following setup instructions
   apps_script_url: 'https://script.google.com/macros/s/AKfycbxDWThcCkdBTzw-TUqW1e3pw4A0KfTfBS3c7dIVHro1qTFYffkVjicVefK8ehaemfVa/exec',
 };
 
@@ -427,7 +426,6 @@ function renderPhotos(ft) {
   count.textContent = arr.length + ' / 8 photos';
 }
 
-// Resize an image data URL for PDF embedding (~200dpi for the cell size used)
 function resizeForPDF(dataUrl) {
   return new Promise(function(resolve) {
     var img = new Image();
@@ -457,15 +455,14 @@ function initPad(id) {
   var dpr = window.devicePixelRatio || 1;
   var hasSig = false;
 
-  // size() resets canvas dimensions (clears it) and re-applies the DPR scale transform
   function size() {
     var w = wrap.offsetWidth || 400;
     var h = wrap.offsetHeight || 110;
     canvas.width  = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     var c = canvas.getContext('2d');
-    c.setTransform(1, 0, 0, 1, 0, 0); // reset any previous transform
-    c.scale(dpr, dpr);                 // draw in CSS-pixel space going forward
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.scale(dpr, dpr);
     c.strokeStyle = '#1A2233';
     c.lineWidth   = 2;
     c.lineCap     = 'round';
@@ -473,7 +470,6 @@ function initPad(id) {
   }
   size();
 
-  // canvas.getContext always returns the same context object; it now has dpr scale baked in
   var ctx = canvas.getContext('2d');
   var drawing = false, px = 0, py = 0;
 
@@ -487,7 +483,6 @@ function initPad(id) {
     drawing = true;
     var p = pos(e); px = p.x; py = p.y;
     ctx.beginPath(); ctx.moveTo(px, py);
-    // Mark as signed on first contact — catches taps that produce very little movement
     if (!hasSig) { hasSig = true; hint.style.display = 'none'; }
   }
   function move(e) {
@@ -511,7 +506,6 @@ function initPad(id) {
   pads[id] = {
     hasSig: function() { return hasSig; },
     getDataURL: function() {
-      // Blit onto a solid background canvas — PNG is lossless and more reliable in jsPDF
       var tmp = document.createElement('canvas');
       tmp.width  = canvas.width;
       tmp.height = canvas.height;
@@ -524,7 +518,7 @@ function initPad(id) {
     clear: function() {
       hasSig = false;
       hint.style.display = '';
-      size(); // reset canvas dimensions → clears it, then reapply scale + styles
+      size();
     }
   };
 }
@@ -644,18 +638,16 @@ async function generatePDF(ft) {
       var notes = (document.getElementById(sid+'_notes')||{}).value||'';
       var noteMaxW = MR - cNote - 2;
 
-      // Calculate wrapped note lines to determine row height
       doc.setFontSize(7); doc.setFont('helvetica','normal');
       var noteLines = notes ? doc.splitTextToSize(notes, noteMaxW) : [];
       var minRH = 6.5;
       var rh = noteLines.length > 1 ? Math.max(minRH, noteLines.length * 4 + 2) : minRH;
 
-      // Page break check
       if (y + rh > PH - 20) {
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, PH-10, PW, 10, 'F');
         doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
+        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
         doc.addPage();
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, 0, PW, 18, 'F');
@@ -687,7 +679,6 @@ async function generatePDF(ft) {
         }
       });
 
-      // Render wrapped note lines
       if (noteLines.length > 0) {
         doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,G4);
         doc.text(noteLines, cNote, y+4.5);
@@ -707,7 +698,7 @@ async function generatePDF(ft) {
   if (dmg) doc.text(doc.splitTextToSize(dmg,MW-4), ML+2, y+5);
   y += 20;
 
-  // Vehicle Photos
+  // Vehicle Photos — resize ALL in parallel, then embed
   var photoArr = photos[ft];
   if (photoArr.length > 0) {
     var pCols = 4, pW = (MW - (pCols-1)*3) / pCols, pH = pW * 0.75;
@@ -716,7 +707,7 @@ async function generatePDF(ft) {
     if (y + photoBlockH > PH - 12) {
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
       doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37',PW/2,PH-4.5,{align:'center'});
+      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38',PW/2,PH-4.5,{align:'center'});
       doc.addPage();
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
       doc.setTextColor(255,255,255);
@@ -727,24 +718,25 @@ async function generatePDF(ft) {
     }
     secHdr('Vehicle Photos');
     y += 3;
-    for (var pi = 0; pi < photoArr.length; pi++) {
+
+    // ★ FIX 1: All canvas resize ops run in parallel — no more sequential await per photo
+    var resizedPhotos = await Promise.all(photoArr.map(resizeForPDF));
+
+    for (var pi = 0; pi < resizedPhotos.length; pi++) {
       var pcol = pi % pCols, prow = Math.floor(pi / pCols);
-      var px = ML + pcol * (pW + 3), py = y + prow * (pH + 3);
-      var resized = await resizeForPDF(photoArr[pi]);
-      doc.addImage(resized, 'JPEG', px, py, pW, pH);
+      var px2 = ML + pcol * (pW + 3), py2 = y + prow * (pH + 3);
+      doc.addImage(resizedPhotos[pi], 'JPEG', px2, py2, pW, pH);
     }
     y += pRows * (pH + 3) + 4;
   }
 
-  // Sign-off — needs ~72mm: header + label + box (38) + date + footer clearance
+  // Sign-off
   var sigBlockNeeded = 72;
   if (y + sigBlockNeeded > PH - 12) {
-    // Draw footer on current page before breaking
     doc.setFillColor.apply(doc, NAVY);
     doc.rect(0, PH-10, PW, 10, 'F');
     doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
-    // New page with repeated header
+    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
     doc.addPage();
     doc.setFillColor.apply(doc, NAVY);
     doc.rect(0, 0, PW, 18, 'F');
@@ -763,7 +755,7 @@ async function generatePDF(ft) {
   var sw = MW/2-6, sh = 38;
 
   function drawSigBox(padId, label, sx) {
-    var by = y; // capture y at the moment this box is drawn
+    var by = y;
     doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor.apply(doc,G4);
     doc.text(label, sx, by);
     doc.setFillColor(238,243,250);
@@ -773,7 +765,7 @@ async function generatePDF(ft) {
     var pad = pads[padId];
     if (pad && pad.hasSig()) {
       var img = pad.getDataURL();
-      doc.addImage(img, 'PNG',  sx+1, by+2, sw-2, sh-2);
+      doc.addImage(img, 'PNG', sx+1, by+2, sw-2, sh-2);
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,170,212);
       doc.text('No signature', sx+sw/2, by+sh/2+2, {align:'center'});
@@ -792,14 +784,12 @@ async function generatePDF(ft) {
   doc.setFillColor.apply(doc,NAVY);
   doc.rect(0, PH-10, PW, 10, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.37', PW/2, PH-4.5, {align:'center'});
+  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
 
   return doc;
 }
 
 // ── SUBMIT ───────────────────────────────────────────────
-
-
 function setStatus(ft, msg) {
   document.getElementById((ft==='checkout'?'co':'ret')+'-status').textContent = msg;
 }
@@ -833,11 +823,9 @@ async function submitForm(ft) {
   try {
     var doc = await generatePDF(ft);
     var pfx = ft==='checkout'?'co':'ret';
-    var vin = (document.getElementById(pfx+'_vin5').value||'UNKNOWN').toUpperCase();
     var dt  = document.getElementById(pfx+'_date').value || new Date().toISOString().slice(0,10);
     var hcsRaw = (document.getElementById(pfx+'_hcs_name').value||'Unknown').trim();
     var hcs = hcsRaw.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-    var formType = ft==='checkout' ? 'CheckOut_Form' : 'Return_Form';
     var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     var dateObj = new Date((document.getElementById(pfx+'_date').value||dt)+'T00:00:00');
     var friendlyDate = dateObj.getFullYear()+'_'+MONTHS[dateObj.getMonth()]+'_'+(dateObj.getDate()<10?'0':'')+dateObj.getDate();
@@ -847,15 +835,22 @@ async function submitForm(ft) {
     var blob = doc.output('blob');
 
     setStatus(ft, 'Saving to Drive & Sheets...');
+
+    // ★ FIX 2: Photos stripped from payload — already embedded in the PDF above.
+    //    This cuts upload size significantly when photos are present.
     var link = await submitToAppsScript(blob, fname, ft);
     showToast('Saved to Drive & logged to Sheets');
 
-    setStatus(ft, 'Sending email...');
-    await sendEmail(fname, ft, link);
-
+    // ★ FIX 3: Show success modal immediately — don't block on email.
+    //    Email fires in the background; user sees the checkmark right away.
     document.getElementById('modal-msg').textContent =
-      'PDF saved to Google Drive, row logged to Sheets, and confirmation email sent to ' + SETTINGS.email + '.';
+      'PDF saved to Google Drive and row logged to Sheets. Confirmation email sending to ' + SETTINGS.email + '.';
     document.getElementById('modal').classList.add('show');
+
+    sendEmail(fname, ft, link).catch(function(e) {
+      console.warn('Email send failed (non-critical):', e);
+    });
+
   } catch(e) {
     console.error(e);
     setStatus(ft, 'Error: ' + e.message);
@@ -870,7 +865,6 @@ function closeModal() {
 }
 
 // ── APPS SCRIPT SUBMIT ───────────────────────────────────
-// Converts a PDF Blob to a base64 string (strips the data-URL prefix)
 function blobToBase64(blob) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
@@ -880,7 +874,6 @@ function blobToBase64(blob) {
   });
 }
 
-// Builds the Sheets row array from current form fields
 function buildRow(ft) {
   var isco = ft === 'checkout';
   var pfx  = isco ? 'co' : 'ret';
@@ -901,35 +894,27 @@ function buildRow(ft) {
     v(pfx+'_phone'),
     v(pfx+'_driver_email'),
     rental
-    // Drive link is appended server-side by Apps Script
   ];
 }
 
-// Posts PDF + form data to the Apps Script web app.
-// No Google sign-in required from the user — the script runs under Dave's account.
+// ★ FIX 2: Removed "photos" from the JSON body.
+//   Old payload: { pdf, filename, row, photos }  ← photos was redundant, just bigger
+//   New payload: { pdf, filename, row }
 async function submitToAppsScript(blob, fname, ft) {
   if (!SETTINGS.apps_script_url || SETTINGS.apps_script_url.startsWith('PASTE')) {
     throw new Error('Apps Script URL not configured in SETTINGS');
   }
   var b64 = await blobToBase64(blob);
 
-  // Strip the data URL prefix (e.g. "data:image/jpeg;base64,") from each photo
-  var photoData = (photos[ft] || []).map(function(dataUrl) {
-    var parts = dataUrl.split(',');
-    var mime = (parts[0].match(/:(.*?);/) || ['','image/jpeg'])[1];
-    return { data: parts[1], mime: mime };
-  });
-
-  // No Content-Type header → "simple" CORS request, no preflight needed
   var res = await fetch(SETTINGS.apps_script_url, {
     method: 'POST',
     redirect: 'follow',
-    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft), photos: photoData })
+    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft) })
   });
   if (!res.ok) throw new Error('Server error: ' + res.status);
   var result = await res.json();
   if (!result.ok) throw new Error(result.error || 'Apps Script error');
-  return result.link; // Drive share link (PDF)
+  return result.link;
 }
 
 // ── EMAILJS ──────────────────────────────────────────────
@@ -974,7 +959,7 @@ function init() {
     var el = document.getElementById(id);
     if (el && !el.value) el.value = today;
   });
-  var APP_VERSION = 'v3.37';
+  var APP_VERSION = 'v3.38';
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   ['co-badge','ret-badge'].forEach(function(id) {
     var el = document.getElementById(id);
