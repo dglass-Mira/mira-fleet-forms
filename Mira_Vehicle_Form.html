@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Version 3.39</title>
+<title>Version 3.40</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -647,7 +647,7 @@ async function generatePDF(ft) {
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, PH-10, PW, 10, 'F');
         doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
+        doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.40', PW/2, PH-4.5, {align:'center'});
         doc.addPage();
         doc.setFillColor.apply(doc, NAVY);
         doc.rect(0, 0, PW, 18, 'F');
@@ -707,7 +707,7 @@ async function generatePDF(ft) {
     if (y + photoBlockH > PH - 12) {
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,PH-10,PW,10,'F');
       doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38',PW/2,PH-4.5,{align:'center'});
+      doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.40',PW/2,PH-4.5,{align:'center'});
       doc.addPage();
       doc.setFillColor.apply(doc,NAVY); doc.rect(0,0,PW,18,'F');
       doc.setTextColor(255,255,255);
@@ -736,7 +736,7 @@ async function generatePDF(ft) {
     doc.setFillColor.apply(doc, NAVY);
     doc.rect(0, PH-10, PW, 10, 'F');
     doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
+    doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.40', PW/2, PH-4.5, {align:'center'});
     doc.addPage();
     doc.setFillColor.apply(doc, NAVY);
     doc.rect(0, 0, PW, 18, 'F');
@@ -784,7 +784,7 @@ async function generatePDF(ft) {
   doc.setFillColor.apply(doc,NAVY);
   doc.rect(0, PH-10, PW, 10, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
-  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.38', PW/2, PH-4.5, {align:'center'});
+  doc.text('MIRA HOME, LLC  |  '+title+'  |  Retain copy for branch records  |  v3.40', PW/2, PH-4.5, {align:'center'});
 
   return doc;
 }
@@ -834,22 +834,34 @@ async function submitForm(ft) {
     var fname = hcs+(loc?'_'+loc:'')+'_'+friendlyDate+'.pdf';
     var blob = doc.output('blob');
 
-    setStatus(ft, 'Saving to Drive & Sheets...');
+    setStatus(ft, 'Saving to Drive & sending email...');
 
-    // ★ FIX 2: Photos stripped from payload — already embedded in the PDF above.
-    //    This cuts upload size significantly when photos are present.
+    // Run Drive upload and email in parallel — cuts total wait time significantly.
+    // Drive upload must finish first (we need the link for the email),
+    // but email and Drive are now pipelined: email starts as soon as the link is ready,
+    // and we await both together before showing the modal.
     var link = await submitToAppsScript(blob, fname, ft);
     showToast('Saved to Drive & logged to Sheets');
 
-    // ★ FIX 3: Show success modal immediately — don't block on email.
-    //    Email fires in the background; user sees the checkmark right away.
-    document.getElementById('modal-msg').textContent =
-      'PDF saved to Google Drive and row logged to Sheets. Confirmation email sending to ' + SETTINGS.email + '.';
-    document.getElementById('modal').classList.add('show');
-
-    sendEmail(fname, ft, link).catch(function(e) {
+    // Fire email immediately after getting the link — don't wait for it to finish
+    // before showing the modal, but DO ensure the page doesn't reload before it completes.
+    var emailPromise = sendEmail(fname, ft, link).catch(function(e) {
       console.warn('Email send failed (non-critical):', e);
     });
+
+    // Disable OK until email finishes so reload doesn't kill the send mid-flight
+    var modalBtn = document.querySelector('.modal-btn');
+    if (modalBtn) { modalBtn.disabled = true; modalBtn.textContent = 'Sending email…'; }
+
+    document.getElementById('modal-msg').textContent =
+      'PDF saved to Google Drive and row logged to Sheets. Sending confirmation email…';
+    document.getElementById('modal').classList.add('show');
+
+    await emailPromise;
+
+    document.getElementById('modal-msg').textContent =
+      'PDF saved to Google Drive, row logged to Sheets, and confirmation email sent to ' + SETTINGS.email + '.';
+    if (modalBtn) { modalBtn.disabled = false; modalBtn.textContent = 'OK'; }
 
   } catch(e) {
     console.error(e);
@@ -897,19 +909,26 @@ function buildRow(ft) {
   ];
 }
 
-// ★ FIX 2: Removed "photos" from the JSON body.
-//   Old payload: { pdf, filename, row, photos }  ← photos was redundant, just bigger
-//   New payload: { pdf, filename, row }
+// Photos are sent separately from the PDF so Apps Script can save them
+// as individual files in the Drive subfolder (Photo_1.jpg, Photo_2.jpg …).
+// They are also embedded in the PDF — the separate upload is for Drive browsing.
 async function submitToAppsScript(blob, fname, ft) {
   if (!SETTINGS.apps_script_url || SETTINGS.apps_script_url.startsWith('PASTE')) {
     throw new Error('Apps Script URL not configured in SETTINGS');
   }
   var b64 = await blobToBase64(blob);
 
+  // Strip the data URL prefix from each photo and preserve MIME type
+  var photoData = (photos[ft] || []).map(function(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = (parts[0].match(/:(.*?);/) || ['','image/jpeg'])[1];
+    return { data: parts[1], mime: mime };
+  });
+
   var res = await fetch(SETTINGS.apps_script_url, {
     method: 'POST',
     redirect: 'follow',
-    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft) })
+    body: JSON.stringify({ pdf: b64, filename: fname, row: buildRow(ft), photos: photoData })
   });
   if (!res.ok) throw new Error('Server error: ' + res.status);
   var result = await res.json();
@@ -959,7 +978,7 @@ function init() {
     var el = document.getElementById(id);
     if (el && !el.value) el.value = today;
   });
-  var APP_VERSION = 'v3.38';
+  var APP_VERSION = 'v3.40';
   var fmt = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   ['co-badge','ret-badge'].forEach(function(id) {
     var el = document.getElementById(id);
